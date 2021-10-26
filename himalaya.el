@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(require 'subr-x)
+
 (defgroup himalaya nil
   "Options related to the himalaya mail client."
   :group 'mail)
