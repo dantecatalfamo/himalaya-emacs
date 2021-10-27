@@ -34,19 +34,33 @@
 
 (defcustom himalaya-executable "himalaya"
   "Name or location of the himalaya executable."
-  :type 'text)
+  :type 'text
+  :group 'himalaya)
 
-(defvar himalaya-id-face font-lock-variable-name-face
-  "Font face for himalaya email IDs.")
+(defcustom himalaya-page-size 100
+  "The number of emails to return per mailbox page."
+  :type 'number
+  :group 'himalaya)
 
-(defvar himalaya-sender-face font-lock-function-name-face
-  "Font face for himalaya sender names.")
+(defcustom himalaya-id-face font-lock-variable-name-face
+  "Font face for himalaya email IDs."
+  :type 'face
+  :group 'himalaya)
 
-(defvar himalaya-date-face font-lock-constant-face
-  "Font face for himalaya dates.")
+(defcustom himalaya-sender-face font-lock-function-name-face
+  "Font face for himalaya sender names."
+  :type 'face
+  :group 'himalaya)
 
-(defvar himalaya-unseen-face font-lock-string-face
-  "Font face for unseen message symbol.")
+(defcustom himalaya-date-face font-lock-constant-face
+  "Font face for himalaya dates."
+  :type 'face
+  :group 'himalaya)
+
+(defcustom himalaya-unseen-face font-lock-string-face
+  "Font face for unseen message symbol."
+  :type 'face
+  :group 'himalaya)
 
 (defvar-local himalaya-mailbox nil
   "The current mailbox.")
@@ -88,15 +102,15 @@ If ACCOUNT is nil, the default account is used."
   (mapcar (lambda (mbox) (plist-get mbox :name))
           (himalaya--mailbox-list account)))
 
-(defun himalaya--message-list (&optional account mailbox page page-size)
+(defun himalaya--message-list (&optional account mailbox page)
   "Return a list of emails from ACCOUNT in MAILBOX.
 Paginate using PAGE of PAGE-SIZE.
-If ACCOUNT, MAILBOX, PAGE, or PAGE-SIZE are nil, the default values are used."
+If ACCOUNT, MAILBOX, or PAGE are nil, the default values are used."
   (himalaya--run-json (when account (list "-a" account))
                       (when mailbox (list "-m" mailbox))
                       "list"
                       (when page (list "-p" (format "%s" page)))
-                      (when page-size (list "-s" (format "%s" page-size)))))
+                      (when himalaya-page-size (list "-s" (prin1-to-string himalaya-page-size)))))
 
 (defun himalaya--message-read (uid &optional account raw html)
   "Return the contents of message with UID from ACCOUNT.
@@ -181,7 +195,6 @@ If ACCOUNT is nil, use the default."
                                ("Subject" 70 nil)
                                ("Sender" 30 nil)
                                ("Date" 19 nil)])
-
   (setq tabulated-list-sort-key nil)
   (setq tabulated-list-entries #'himalaya--message-list-build-table)
   (tabulated-list-init-header))
