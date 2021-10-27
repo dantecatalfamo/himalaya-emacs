@@ -69,6 +69,9 @@
 (defvar-local himalaya-account nil
   "The current account.")
 
+(defvar-local himalaya-uid nil
+  "The current message uid.")
+
 (defun himalaya--run (&rest args)
   "Run himalaya with ARGS.
 Results are returned as a string. Signals a Lisp error and
@@ -91,6 +94,13 @@ The result is parsed as JSON and returned."
     (cadr (json-parse-string (himalaya--run args)
                              :object-type 'plist
                              :array-type 'list))))
+
+(defun himalaya--extract-headers (message)
+  "Extract email headers from MESSAGE."
+  (with-temp-buffer
+    (insert message)
+    (goto-char (point-min))
+    (mail-header-extract-no-properties)))
 
 (defun himalaya--mailbox-list (&optional account)
   "Return a list of mailboxes for ACCOUNT.
@@ -187,18 +197,17 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 (defun himalaya-message-read (uid &optional account mailbox)
   "Display message UID from MAILBOX on ACCOUNT.
 If ACCOUNT or MAILBOX are nil, use the defaults."
-  (let ((message (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox)))
-        (message-raw (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox 'raw)))
-        headers)
-    (with-temp-buffer
-      (insert message-raw)
-      (goto-char (point-min))
-      (setq headers (mail-header-extract-no-properties)))
+  (let* ((message (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox)))
+         (message-raw (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox 'raw)))
+         (headers (himalaya--extract-headers message-raw)))
     (switch-to-buffer (format "*%s*" (alist-get 'subject headers)))
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert message))
-    (himalaya-message-read-mode)))
+    (himalaya-message-read-mode)
+    (setq himalaya-account account)
+    (setq himalaya-mailbox mailbox)
+    (setq himalaya-uid uid)))
 
 (defun himalaya-message-select ()
   "Read the message at point."
