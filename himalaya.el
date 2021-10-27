@@ -132,9 +132,9 @@ otherwise return the plain text version."
   (himalaya--run-json (when account (list "-a" account))
                       (when mailbox (list "-m" mailbox))
                       "read"
-                      (format "%s" uid) ; Ensure uid is a string
                       (when raw "-r")
-                      (when html (list "-t" "html"))))
+                      (when html (list "-t" "html"))
+                      (format "%s" uid))) ; Ensure uid is a string
 
 (defun himalaya--message-copy (uid target &optional account mailbox)
   "Copy message with UID from MAILBOX to TARGET mailbox on ACCOUNT.
@@ -209,6 +209,30 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
     (setq himalaya-mailbox mailbox)
     (setq himalaya-uid uid)))
 
+(defun himalaya-message-read-raw (uid &optional account mailbox)
+  "Display raw message UID from MAILBOX on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, use the defaults."
+  (let* ((message-raw (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox 'raw)))
+         (headers (himalaya--extract-headers message-raw)))
+    (switch-to-buffer (format "*Raw: %s*" (alist-get 'subject headers)))
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (insert message-raw))
+    (himalaya-message-read-raw-mode)
+    (setq himalaya-account account)
+    (setq himalaya-mailbox mailbox)
+    (setq himalaya-uid uid)))
+
+(defun himalaya-message-read-switch-raw ()
+  "Read a raw version of the current message."
+  (interactive)
+  (himalaya-message-read-raw himalaya-uid himalaya-account himalaya-mailbox))
+
+(defun himalaya-message-read-switch-plain ()
+  "Read a plain version of the current message."
+  (interactive)
+  (himalaya-message-read himalaya-uid himalaya-account himalaya-mailbox))
+
 (defun himalaya-message-select ()
   "Read the message at point."
   (interactive)
@@ -233,8 +257,21 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
   (setq tabulated-list-entries #'himalaya--message-list-build-table)
   (tabulated-list-init-header))
 
+(defvar himalaya-message-read-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "r") #'himalaya-message-read-switch-raw)
+    map))
+
 (define-derived-mode himalaya-message-read-mode special-mode "Himalaya-Read"
   "Himalaya email client message reading mode.")
+
+(defvar himalaya-message-read-raw-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "r") #'himalaya-message-read-switch-plain)
+    map))
+
+(define-derived-mode himalaya-message-read-raw-mode special-mode "Himalaya-Read-Raw"
+  "Himalaya email client raw message mode.")
 
 (provide 'himalaya)
 ;;; himalaya.el ends here
