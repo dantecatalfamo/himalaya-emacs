@@ -79,7 +79,7 @@
   :type 'text
   :group 'himalaya)
 
-(defcustom himalaya-flagged-symbol "★"
+(defcustom himalaya-flagged-symbol "⚑"
   "Symbol to display in the flags column when a message has been flagged."
   :type 'text
   :group 'himalaya)
