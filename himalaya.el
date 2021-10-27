@@ -84,6 +84,17 @@
   :type 'text
   :group 'himalaya)
 
+(defcustom himalaya-subject-width 70
+  "Width of the subject column in the message list."
+  :type 'number
+  :group 'himalaya)
+
+(defcustom himalaya-from-width 30
+  "Width of the from column in the message list."
+  :type 'number
+  :group 'himalaya)
+
+
 (defvar-local himalaya-mailbox nil
   "The current mailbox.")
 
@@ -270,11 +281,12 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 
 (define-derived-mode himalaya-message-list-mode tabulated-list-mode "Himylaya-Messages"
   "Himylaya email client message list mode."
-  (setq tabulated-list-format [("ID" 5 nil :right-align t)
-                               ("Flags" 6 nil)
-                               ("Subject" 70 nil)
-                               ("Sender" 30 nil)
-                               ("Date" 19 nil)])
+  (setq tabulated-list-format (vector
+                               '("ID" 5 nil :right-align t)
+                               '("Flags" 6 nil)
+                               (list "Subject" himalaya-subject-width nil)
+                               (list "Sender" himalaya-from-width nil)
+                               '("Date" 19 nil)))
   (setq tabulated-list-sort-key nil)
   (setq tabulated-list-entries #'himalaya--message-list-build-table)
   (tabulated-list-init-header))
