@@ -36,9 +36,27 @@
   "Name or location of the himalaya executable."
   :type 'text)
 
+(defvar himalaya-id-face font-lock-variable-name-face
+  "Font face for himalaya email IDs.")
+
+(defvar himalaya-sender-face font-lock-function-name-face
+  "Font face for himalaya sender names.")
+
+(defvar himalaya-date-face font-lock-constant-face
+  "Font face for himalaya dates.")
+
+(defvar himalaya-unseen-face font-lock-string-face
+  "Font face for unseen message symbol.")
+
+(defvar-local himalaya-mailbox nil
+  "The current mailbox.")
+
+(defvar-local himalaya-account nil
+  "The current account.")
+
 (defun himalaya--run (&rest args)
   "Run himalaya with ARGS.
-Results are returned as a string. Signals a lisp error and
+Results are returned as a string. Signals a Lisp error and
 displaus the output on non-zero exit."
   (with-temp-buffer
     (let* ((args (flatten-list args))
@@ -63,6 +81,12 @@ The result is parsed as JSON and returned."
   "Return a list of mailboxes for ACCOUNT.
 If ACCOUNT is nil, the default account is used."
   (himalaya--run-json (when account (list "-a" account)) "mailboxes"))
+
+(defun himalaya--mailbox-list-names (&optional account)
+  "Return a list of mailbox names for ACCOUNT.
+If ACCOUNT is nil, the default account is used."
+  (mapcar (lambda (mbox) (plist-get mbox :name))
+          (himalaya--mailbox-list account)))
 
 (defun himalaya--message-list (&optional account mailbox page page-size)
   "Return a list of emails from ACCOUNT in MAILBOX.
@@ -101,6 +125,66 @@ If ACCOUNT is nil, use the default."
                       "move"
                       (format "%s" uid)
                       target))
+
+(defun himalaya--message-flag-symbols (flags)
+  "Generate a display string for FLAGS."
+  (let ((output ""))
+    (unless (member "Seen" flags)
+      (setq output (concat output (propertize "*" 'face himalaya-unseen-face))))
+    (when (member "Answered" flags)
+      (setq output (concat output "↵")))
+    output))
+
+(defun himalaya--message-list-build-table ()
+  "Construct the message list table."
+  (let ((messages (himalaya--message-list himalaya-account himalaya-mailbox))
+        entries)
+    (dolist (message messages entries)
+      (push (list (plist-get message :id)
+                  (vector
+                   (propertize (prin1-to-string (plist-get message :id)) 'face himalaya-id-face)
+                   (himalaya--message-flag-symbols (plist-get message :flags))
+                   (plist-get message :subject)
+                   (propertize (plist-get message :sender) 'face himalaya-sender-face)
+                   (propertize (plist-get message :date) 'face himalaya-date-face)))
+            entries))))
+
+(defun himalaya-message-list (&optional account mailbox)
+  "List messages in MAILBOX on ACCOUNT."
+  (interactive)
+  (switch-to-buffer (concat "*Himalaya Mailbox"
+                            (when (or account mailbox) ": ")
+                            account
+                            (and account mailbox "/")
+                            mailbox
+                            "*"))
+
+  (himalaya-message-list-mode)
+  (setq-local himalaya-mailbox mailbox)
+  (setq-local himalaya-account account)
+  (revert-buffer))
+
+(defun himalaya-switch-mailbox (mailbox)
+  "Switch to MAILBOX on the current email account."
+  (interactive (list (completing-read "Mailbox: " (himalaya--mailbox-list-names himalaya-account))))
+  (himalaya-message-list himalaya-account mailbox))
+
+(defvar himalaya-message-list-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "m") #'himalaya-switch-mailbox)
+    map))
+
+(define-derived-mode himalaya-message-list-mode tabulated-list-mode "Himylaya-Messages"
+  "Himylaya email client message list mode."
+  (setq tabulated-list-format [("ID" 5 nil :right-align t)
+                               ("Flags" 6 nil)
+                               ("Subject" 70 nil)
+                               ("Sender" 30 nil)
+                               ("Date" 19 nil)])
+
+  (setq tabulated-list-sort-key nil)
+  (setq tabulated-list-entries #'himalaya--message-list-build-table)
+  (tabulated-list-init-header))
 
 (provide 'himalaya)
 ;;; himalaya.el ends here
