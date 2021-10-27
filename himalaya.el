@@ -130,6 +130,7 @@ otherwise return the plain text version."
   "Copy message with UID from MAILBOX to TARGET mailbox on ACCOUNT.
 If ACCOUNT or MAILBOX are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
+                      (when mailbox (list "-m" mailbox))
                       "copy"
                       (format "%s" uid)
                       target))
@@ -138,6 +139,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
   "Move message with UID from MAILBOX to TARGET mailbox on ACCOUNT.
 If ACCOUNT or MAILBOX are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
+                      (when mailbox (list "-m" mailbox))
                       "move"
                       (format "%s" uid)
                       target))
