@@ -64,13 +64,23 @@
   :type 'face
   :group 'himalaya)
 
+(defcustom himalaya-flagged-face font-lock-warning-face
+  "Font face for flagged message symbol."
+  :type 'face
+  :group 'himalaya)
+
 (defcustom himalaya-unseen-symbol "●"
   "Symbol to display in the flags column when a message hasn't been read yet."
   :type 'text
   :group 'himalaya)
 
 (defcustom himalaya-answered-symbol "↵"
-  "Symbol to display in the flags column when a message that's been replied to."
+  "Symbol to display in the flags column when a message has been replied to."
+  :type 'text
+  :group 'himalaya)
+
+(defcustom himalaya-flagged-symbol "★"
+  "Symbol to display in the flags column when a message has been flagged."
   :type 'text
   :group 'himalaya)
 
@@ -169,7 +179,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
   "Generate a display string for FLAGS."
   (concat
    (if (member "Seen" flags) " " (propertize himalaya-unseen-symbol 'face himalaya-unseen-face))
-   (if (member "Answered" flags) himalaya-answered-symbol " ")))
+   (if (member "Answered" flags) himalaya-answered-symbol " ")
+   (if (member "Flagged" flags) (propertize himalaya-flagged-symbol 'face himalaya-flagged-face) " ")))
 
 (defun himalaya--message-list-build-table ()
   "Construct the message list table."
