@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'subr-x)
+(require 'mailheader)
 
 (defgroup himalaya nil
   "Options related to the himalaya mail client."
@@ -112,29 +113,30 @@ If ACCOUNT, MAILBOX, or PAGE are nil, the default values are used."
                       (when page (list "-p" (format "%s" page)))
                       (when himalaya-page-size (list "-s" (prin1-to-string himalaya-page-size)))))
 
-(defun himalaya--message-read (uid &optional account raw html)
-  "Return the contents of message with UID from ACCOUNT.
-If ACCOUNT is nil, use the default. If RAW is non-nil, return the
-raw contents of the email including headers. If HTML is non-nil,
-return the HTML version of the email, otherwise return the plain
-text version."
-  (himalaya--run-json (when account (concat "-a " account))
+(defun himalaya--message-read (uid &optional account mailbox raw html)
+  "Return the contents of message with UID from MAILBOX on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, use the defaults. If RAW is
+non-nil, return the raw contents of the email including headers.
+If HTML is non-nil, return the HTML version of the email,
+otherwise return the plain text version."
+  (himalaya--run-json (when account (list "-a" account))
+                      (when mailbox (list "-m" mailbox))
                       "read"
                       (format "%s" uid) ; Ensure uid is a string
                       (when raw "-r")
                       (when html (list "-t" "html"))))
 
-(defun himalaya--message-copy (uid target &optional account)
-  "Copy message with UID to TARGET mailbox on ACCOUNT.
-If ACCOUNT is nil, use the default."
+(defun himalaya--message-copy (uid target &optional account mailbox)
+  "Copy message with UID from MAILBOX to TARGET mailbox on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       "copy"
                       (format "%s" uid)
                       target))
 
-(defun himalaya--message-move (uid target &optional account)
-  "Move message with UID to TARGET mailbox on ACCOUNT.
-If ACCOUNT is nil, use the default."
+(defun himalaya--message-move (uid target &optional account mailbox)
+  "Move message with UID from MAILBOX to TARGET mailbox on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       "move"
                       (format "%s" uid)
@@ -142,12 +144,9 @@ If ACCOUNT is nil, use the default."
 
 (defun himalaya--message-flag-symbols (flags)
   "Generate a display string for FLAGS."
-  (let ((output ""))
-    (unless (member "Seen" flags)
-      (setq output (concat output (propertize "*" 'face himalaya-unseen-face))))
-    (when (member "Answered" flags)
-      (setq output (concat output "↵")))
-    output))
+  (concat
+   (if (member "Seen" flags) " " (propertize "●" 'face himalaya-unseen-face))
+   (if (member "Answered" flags) "↵" " ")))
 
 (defun himalaya--message-list-build-table ()
   "Construct the message list table."
@@ -183,9 +182,33 @@ If ACCOUNT is nil, use the default."
   (interactive (list (completing-read "Mailbox: " (himalaya--mailbox-list-names himalaya-account))))
   (himalaya-message-list himalaya-account mailbox))
 
+(defun himalaya-message-read (uid &optional account mailbox)
+  "Display message UID from MAILBOX on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, use the defaults."
+  (let ((message (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox)))
+        (message-raw (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox 'raw)))
+        headers)
+    (with-temp-buffer
+      (insert message-raw)
+      (goto-char (point-min))
+      (setq headers (mail-header-extract-no-properties)))
+    (switch-to-buffer (format "*%s*" (alist-get 'subject headers)))
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (insert message))
+    (himalaya-message-read-mode)))
+
+(defun himalaya-message-select ()
+  "Read the message at point."
+  (interactive)
+  (let* ((message (tabulated-list-get-entry))
+         (uid (substring-no-properties (elt message 0))))
+    (himalaya-message-read uid himalaya-account himalaya-mailbox)))
+
 (defvar himalaya-message-list-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "m") #'himalaya-switch-mailbox)
+    (define-key map (kbd "RET") #'himalaya-message-select)
     map))
 
 (define-derived-mode himalaya-message-list-mode tabulated-list-mode "Himylaya-Messages"
@@ -198,6 +221,9 @@ If ACCOUNT is nil, use the default."
   (setq tabulated-list-sort-key nil)
   (setq tabulated-list-entries #'himalaya--message-list-build-table)
   (tabulated-list-init-header))
+
+(define-derived-mode himalaya-message-read-mode special-mode "Himalaya-Read"
+  "Himalaya email client message reading mode.")
 
 (provide 'himalaya)
 ;;; himalaya.el ends here
