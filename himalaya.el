@@ -64,6 +64,16 @@
   :type 'face
   :group 'himalaya)
 
+(defcustom himalaya-unseen-symbol "●"
+  "Symbol to display in the flags column when a message hasn't been read yet."
+  :type 'text
+  :group 'himalaya)
+
+(defcustom himalaya-answered-symbol "↵"
+  "Symbol to display in the flags column when a message that's been replied to."
+  :type 'text
+  :group 'himalaya)
+
 (defvar-local himalaya-mailbox nil
   "The current mailbox.")
 
@@ -158,8 +168,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 (defun himalaya--message-flag-symbols (flags)
   "Generate a display string for FLAGS."
   (concat
-   (if (member "Seen" flags) " " (propertize "●" 'face himalaya-unseen-face))
-   (if (member "Answered" flags) "↵" " ")))
+   (if (member "Seen" flags) " " (propertize himalaya-unseen-symbol 'face himalaya-unseen-face))
+   (if (member "Answered" flags) himalaya-answered-symbol " ")))
 
 (defun himalaya--message-list-build-table ()
   "Construct the message list table."
