@@ -227,6 +227,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
   (setq mode-line-process (format " [Page %s]" himalaya-page))
   (revert-buffer))
 
+;;;###autoload
 (defalias 'himalaya #'himalaya-message-list)
 
 (defun himalaya-switch-mailbox (mailbox)
