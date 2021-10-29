@@ -69,6 +69,11 @@
   :type 'face
   :group 'himalaya)
 
+(defcustom himalaya-headers-face font-lock-constant-face
+  "Font face for headers when reading a message."
+  :type 'face
+  :group 'himalaya)
+
 (defcustom himalaya-unseen-symbol "●"
   "Symbol to display in the flags column when a message hasn't been read yet."
   :type 'text
@@ -244,6 +249,15 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
     (switch-to-buffer (format "*%s*" (alist-get 'subject headers)))
     (let ((inhibit-read-only t))
       (erase-buffer)
+      (insert (propertize "From: " 'face himalaya-headers-face)
+              (alist-get 'from headers) "\n")
+      (insert (propertize "To: " 'face himalaya-headers-face)
+              (alist-get 'to headers) "\n")
+      (insert (propertize "Subject: " 'face himalaya-headers-face)
+              (alist-get 'subject headers) "\n")
+      (insert (propertize "Date: " 'face himalaya-headers-face)
+              (alist-get 'date headers) "\n")
+      (insert "\n")
       (insert message))
     (himalaya-message-read-mode)
     (setq himalaya-account account)
