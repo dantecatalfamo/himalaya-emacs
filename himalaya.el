@@ -320,7 +320,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 
 (defvar himalaya-message-read-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "r") #'himalaya-message-read-switch-raw)
+    (define-key map (kbd "R") #'himalaya-message-read-switch-raw)
     map))
 
 (define-derived-mode himalaya-message-read-mode special-mode "Himalaya-Read"
@@ -328,7 +328,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 
 (defvar himalaya-message-read-raw-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "r") #'himalaya-message-read-switch-plain)
+    (define-key map (kbd "R") #'himalaya-message-read-switch-plain)
     map))
 
 (define-derived-mode himalaya-message-read-raw-mode special-mode "Himalaya-Read-Raw"
