@@ -104,6 +104,9 @@
 (defvar-local himalaya-uid nil
   "The current message uid.")
 
+(defvar-local himalaya-page 1
+  "The current mailbox page.")
+
 (defun himalaya--run (&rest args)
   "Run himalaya with ARGS.
 Results are returned as a string. Signals a Lisp error and
@@ -195,7 +198,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 
 (defun himalaya--message-list-build-table ()
   "Construct the message list table."
-  (let ((messages (himalaya--message-list himalaya-account himalaya-mailbox))
+  (let ((messages (himalaya--message-list himalaya-account himalaya-mailbox himalaya-page))
         entries)
     (dolist (message messages entries)
       (push (list (plist-get message :id)
@@ -207,7 +210,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                    (propertize (plist-get message :date) 'face himalaya-date-face)))
             entries))))
 
-(defun himalaya-message-list (&optional account mailbox)
+(defun himalaya-message-list (&optional account mailbox page)
   "List messages in MAILBOX on ACCOUNT."
   (interactive)
   (switch-to-buffer (concat "*Himalaya Mailbox"
@@ -218,9 +221,13 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                             "*"))
 
   (himalaya-message-list-mode)
-  (setq-local himalaya-mailbox mailbox)
-  (setq-local himalaya-account account)
+  (setq himalaya-mailbox mailbox)
+  (setq himalaya-account account)
+  (setq himalaya-page (or page himalaya-page))
+  (setq mode-line-process (format " [Page %s]" himalaya-page))
   (revert-buffer))
+
+(defalias 'himalaya #'himalaya-message-list)
 
 (defun himalaya-switch-mailbox (mailbox)
   "Switch to MAILBOX on the current email account."
@@ -273,10 +280,28 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
          (uid (substring-no-properties (elt message 0))))
     (himalaya-message-read uid himalaya-account himalaya-mailbox)))
 
+(defun himalaya-forward-page ()
+  "Go to the next page of the current mailbox."
+  (interactive)
+  (himalaya-message-list himalaya-account himalaya-mailbox (1+ himalaya-page)))
+
+(defun himalaya-backward-page ()
+  "Go to the previous page of the current mailbox."
+  (interactive)
+  (himalaya-message-list himalaya-account himalaya-mailbox (max 1 (1- himalaya-page))))
+
+(defun himalaya-jump-to-page (page)
+  "Jump to PAGE of current mailbox."
+  (interactive "nJump to page: ")
+  (himalaya-message-list himalaya-account himalaya-mailbox (max 1 page)))
+
 (defvar himalaya-message-list-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "m") #'himalaya-switch-mailbox)
     (define-key map (kbd "RET") #'himalaya-message-select)
+    (define-key map (kbd "f") #'himalaya-forward-page)
+    (define-key map (kbd "b") #'himalaya-backward-page)
+    (define-key map (kbd "j") #'himalaya-jump-to-page)
     map))
 
 (define-derived-mode himalaya-message-list-mode tabulated-list-mode "Himylaya-Messages"
@@ -289,7 +314,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                                '("Date" 19 nil)))
   (setq tabulated-list-sort-key nil)
   (setq tabulated-list-entries #'himalaya--message-list-build-table)
-  (tabulated-list-init-header))
+  (tabulated-list-init-header)
+  (hl-line-mode))
 
 (defvar himalaya-message-read-mode-map
   (let ((map (make-sparse-keymap)))
