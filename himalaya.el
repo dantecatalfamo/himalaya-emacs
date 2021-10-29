@@ -281,12 +281,16 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 (defun himalaya-message-read-switch-raw ()
   "Read a raw version of the current message."
   (interactive)
-  (himalaya-message-read-raw himalaya-uid himalaya-account himalaya-mailbox))
+  (let ((buf (current-buffer)))
+    (himalaya-message-read-raw himalaya-uid himalaya-account himalaya-mailbox)
+    (kill-buffer buf)))
 
 (defun himalaya-message-read-switch-plain ()
   "Read a plain version of the current message."
   (interactive)
-  (himalaya-message-read himalaya-uid himalaya-account himalaya-mailbox))
+  (let ((buf (current-buffer)))
+    (himalaya-message-read himalaya-uid himalaya-account himalaya-mailbox)
+    (kill-buffer buf)))
 
 (defun himalaya-message-select ()
   "Read the message at point."
