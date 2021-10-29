@@ -320,6 +320,24 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
   (interactive "nJump to page: ")
   (himalaya-message-list himalaya-account himalaya-mailbox (max 1 page)))
 
+(defun himalaya-next-message ()
+  "Go to the next message."
+  (interactive)
+  (condition-case nil
+      (himalaya-message-read (prin1-to-string (1+ (string-to-number himalaya-uid)))
+                             himalaya-account
+                             himalaya-mailbox)
+    (t (user-error "At end of mailbox"))))
+
+(defun himalaya-previous-message ()
+  "Go to the previous message."
+  (interactive)
+  (when (string= himalaya-uid "1")
+    (user-error "At beginning of mailbox"))
+  (himalaya-message-read (prin1-to-string (max 1 (1- (string-to-number himalaya-uid))))
+                         himalaya-account
+                         himalaya-mailbox))
+
 (defvar himalaya-message-list-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "m") #'himalaya-switch-mailbox)
@@ -346,6 +364,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "R") #'himalaya-message-read-switch-raw)
     (define-key map (kbd "q") #'kill-current-buffer)
+    (define-key map (kbd "n") #'himalaya-next-message)
+    (define-key map (kbd "p") #'himalaya-previous-message)
     map))
 
 (define-derived-mode himalaya-message-read-mode special-mode "Himalaya-Read"
@@ -355,6 +375,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "R") #'himalaya-message-read-switch-plain)
     (define-key map (kbd "q") #'kill-current-buffer)
+    (define-key map (kbd "n") #'himalaya-next-message)
+    (define-key map (kbd "p") #'himalaya-previous-message)
     map))
 
 (define-derived-mode himalaya-message-read-raw-mode special-mode "Himalaya-Read-Raw"
