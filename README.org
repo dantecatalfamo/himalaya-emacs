@@ -1,5 +1,5 @@
 * Himalaya Emacs
-  Emacs client for [[https://github.com/soywod/himalaya][himalaya]] email client.
+  Emacs front-end for the [[https://github.com/soywod/himalaya][himalaya]] email client.
 
   This is currently a work in progress.
 
