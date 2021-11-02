@@ -3,6 +3,9 @@
 
   This is currently a work in progress.
 
+  Most settings can be customized through the Emacs Easy Customize
+  system. =M-x customize-group himalaya=
+
 ** List Messages
 
    =M-x himalaya= or =M-x himalaya-message-list=
