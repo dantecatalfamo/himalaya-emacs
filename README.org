@@ -1,0 +1,30 @@
+* Himalaya Emacs
+  Emacs client for [[https://github.com/soywod/himalaya][himalaya]] email client.
+
+  This is currently a work in progress.
+
+** List Messages
+
+   =M-x himalaya= or =M-x himalaya-message-list=
+
+   | Key | Action           |
+   |-----+------------------|
+   | n   | Move cursor down |
+   | p   | Move cursor up   |
+   | f   | Forward page     |
+   | b   | Backwards page   |
+   | j   | Jump to page     |
+   | m   | Switch mailboxe  |
+   | RET | View message     |
+
+** Read Message
+
+   After pressing enter on a message, you'll enter the message viewing
+   mode.
+
+   | Key | Action           |
+   |-----+------------------|
+   | n   | Next message     |
+   | p   | Previous message |
+   | R   | View raw message |
+   | q   | Kill buffer      |
