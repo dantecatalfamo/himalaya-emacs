@@ -41,12 +41,14 @@
 
 (defcustom himalaya-default-account nil
   "Default account for himalaya, overrides the himalaya config."
-  :type 'text
+  :type '(choice (const :tag "None" nil)
+                 (text :tag "String"))
   :group 'himalaya)
 
 (defcustom himalaya-default-mailbox nil
   "Ddefault mailbox for himalaya, overrides the himalaya config."
-  :type 'text
+  :type '(choice (const :tag "None" nil)
+                (text :tag "String"))
   :group 'himalaya)
 
 (defcustom himalaya-page-size 100
