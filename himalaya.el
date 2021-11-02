@@ -39,6 +39,12 @@
   :type 'text
   :group 'himalaya)
 
+(defcustom himalaya-message-order nil
+  "Order of how messages are displayed on each page of the mailbox."
+  :type '(radio (const :tag "Ascending (oldest first)" t)
+                (const :tag "Descending (newest first)" nil))
+  :group 'himalaya)
+
 (defcustom himalaya-default-account nil
   "Default account for himalaya, overrides the himalaya config."
   :type '(choice (const :tag "None" nil)
@@ -225,7 +231,10 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                    (plist-get message :subject)
                    (propertize (plist-get message :sender) 'face himalaya-sender-face)
                    (propertize (plist-get message :date) 'face himalaya-date-face)))
-            entries))))
+            entries))
+    (if himalaya-message-order
+        entries
+      (nreverse entries))))
 
 (defun himalaya-message-list (&optional account mailbox page)
   "List messages in MAILBOX on ACCOUNT."
