@@ -39,6 +39,16 @@
   :type 'text
   :group 'himalaya)
 
+(defcustom himalaya-default-account nil
+  "Default account for himalaya, overrides the himalaya config."
+  :type 'text
+  :group 'himalaya)
+
+(defcustom himalaya-default-mailbox nil
+  "Ddefault mailbox for himalaya, overrides the himalaya config."
+  :type 'text
+  :group 'himalaya)
+
 (defcustom himalaya-page-size 100
   "The number of emails to return per mailbox page."
   :type 'number
@@ -218,6 +228,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 (defun himalaya-message-list (&optional account mailbox page)
   "List messages in MAILBOX on ACCOUNT."
   (interactive)
+  (setq account (or account himalaya-default-account))
+  (setq mailbox (or mailbox himalaya-default-account))
   (switch-to-buffer (concat "*Himalaya Mailbox"
                             (when (or account mailbox) ": ")
                             account
