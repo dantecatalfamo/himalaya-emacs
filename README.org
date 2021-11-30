@@ -10,15 +10,17 @@
 
    =M-x himalaya= or =M-x himalaya-message-list=
 
-   | Key | Action           |
-   |-----+------------------|
-   | n   | Move cursor down |
-   | p   | Move cursor up   |
-   | f   | Forward page     |
-   | b   | Backwards page   |
-   | j   | Jump to page     |
-   | m   | Switch mailboxe  |
-   | RET | View message     |
+   | Key   | Action           |
+   |-------+------------------|
+   | =n=   | Move cursor down |
+   | =p=   | Move cursor up   |
+   | =f=   | Forward page     |
+   | =b=   | Backwards page   |
+   | =j=   | Jump to page     |
+   | =m=   | Switch mailboxe  |
+   | =C=   | Copy message     |
+   | =M=   | Move message     |
+   | =RET= | View message     |
 
 ** Read Message
 
@@ -27,7 +29,7 @@
 
    | Key | Action           |
    |-----+------------------|
-   | n   | Next message     |
-   | p   | Previous message |
-   | R   | View raw message |
-   | q   | Kill buffer      |
+   | =n= | Next message     |
+   | =p= | Previous message |
+   | =R= | View raw message |
+   | =q= | Kill buffer      |
