@@ -27,6 +27,9 @@
 
 ;;; Code:
 
+;; TODO: See `tablist-put-mark' as reference for tagging messages.
+;; `package-menu-mark-install' and `package-menu-execute' are also good.
+
 (require 'subr-x)
 (require 'mailheader)
 
@@ -397,6 +400,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                                '("Date" 19 nil)))
   (setq tabulated-list-sort-key nil)
   (setq tabulated-list-entries #'himalaya--message-list-build-table)
+  (setq tabulated-list-padding 1)
   (tabulated-list-init-header)
   (hl-line-mode))
 
