@@ -328,6 +328,21 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
          (uid (substring-no-properties (elt message 0))))
     (himalaya-message-read uid himalaya-account himalaya-mailbox)))
 
+(defun himalaya-message-copy (target)
+  "Copy the message at point to TARGET mailbox."
+  (interactive (list (completing-read "Copy to mailbox: " (himalaya--mailbox-list-names himalaya-account))))
+  (let* ((message (tabulated-list-get-entry))
+         (uid (substring-no-properties (elt message 0))))
+    (message "%s" (himalaya--message-copy uid target himalaya-account himalaya-mailbox))))
+
+(defun himalaya-message-move (target)
+  "Move the message at point to TARGET mailbox."
+  (interactive (list (completing-read "Move to mailbox: " (himalaya--mailbox-list-names himalaya-account))))
+  (let* ((message (tabulated-list-get-entry))
+         (uid (substring-no-properties (elt message 0))))
+    (message "%s" (himalaya--message-move uid target himalaya-account himalaya-mailbox))
+    (revert-buffer)))
+
 (defun himalaya-forward-page ()
   "Go to the next page of the current mailbox."
   (interactive)
@@ -368,6 +383,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
     (define-key map (kbd "f") #'himalaya-forward-page)
     (define-key map (kbd "b") #'himalaya-backward-page)
     (define-key map (kbd "j") #'himalaya-jump-to-page)
+    (define-key map (kbd "C") #'himalaya-message-copy)
+    (define-key map (kbd "M") #'himalaya-message-move)
     map))
 
 (define-derived-mode himalaya-message-list-mode tabulated-list-mode "Himylaya-Messages"
