@@ -215,6 +215,32 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                       (format "%s" uid)
                       target))
 
+(defun himalaya--template-new (&optional account)
+  "Return a template for a new message from ACCOUNT."
+  (himalaya--run-json (when account (list "-a" account))
+                      "template"
+                      "new"))
+
+(defun himalaya--template-reply (uid &optional account mailbox reply-all)
+  "Return a reply template for message with UID from MAILBOX on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, use the defaults.
+If REPLY-ALL is non-nil, the template will be generated as a reply all message."
+  (himalaya--run-json (when account (list "-a" account))
+                      (when mailbox (list "-m" mailbox))
+                      "template"
+                      "reply"
+                      (when reply-all "--all")
+                      (format "%s" uid)))
+
+(defun himalaya--template-forward (uid &optional account mailbox)
+  "Return a forward template for message with UID from MAILBOX on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, use the defaults."
+  (himalaya--run-json (when account (list "-a" account))
+                      (when mailbox (list "-m" mailbox))
+                      "template"
+                      "forward"
+                      (format "%s" uid)))
+
 (defun himalaya--message-flag-symbols (flags)
   "Generate a display string for FLAGS."
   (concat
