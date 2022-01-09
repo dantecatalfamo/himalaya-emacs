@@ -32,6 +32,7 @@
 
 (require 'subr-x)
 (require 'mailheader)
+(require 'message)
 
 (defgroup himalaya nil
   "Options related to the himalaya mail client."
@@ -129,6 +130,9 @@
 
 (defvar-local himalaya-uid nil
   "The current message uid.")
+
+(defvar-local himalaya-subject nil
+  "The current message subject.")
 
 (defvar-local himalaya-page 1
   "The current mailbox page.")
@@ -320,7 +324,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
     (himalaya-message-read-mode)
     (setq himalaya-account account)
     (setq himalaya-mailbox mailbox)
-    (setq himalaya-uid uid)))
+    (setq himalaya-uid uid)
+    (setq himalaya-subject (alist-get 'subject headers))))
 
 (defun himalaya-message-read-raw (uid &optional account mailbox)
   "Display raw message UID from MAILBOX on ACCOUNT.
@@ -349,6 +354,26 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
   (let ((buf (current-buffer)))
     (himalaya-message-read himalaya-uid himalaya-account himalaya-mailbox)
     (kill-buffer buf)))
+
+(defun himalaya-message-read-reply (&optional reply-all)
+  "Open a new buffer with a reply template to the current message.
+If called with \\[universal-argument], message will be REPLY-ALL."
+  (interactive "P")
+  (let ((template (himalaya--template-reply himalaya-uid himalaya-account himalaya-mailbox reply-all)))
+    (switch-to-buffer (format "*Reply: %s*" himalaya-subject))
+    (erase-buffer)
+    (insert template))
+  (goto-char (point-min))
+  (search-forward "\n\n")
+  (forward-line -1)
+  (insert mail-header-separator)
+  (forward-line)
+  (message-mode)
+  ;; We do a little hacking
+  (make-local-variable 'message-send-method-alist)
+  (setf (caddr (assoc 'mail message-send-method-alist))
+        ;; TODO: Fill this out to actually send
+        (lambda (&optional _arg) (message "we do a little hacking"))))
 
 (defun himalaya-message-select ()
   "Read the message at point."
@@ -433,6 +458,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 (defvar himalaya-message-read-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "R") #'himalaya-message-read-switch-raw)
+    (define-key map (kbd "r") #'himalaya-message-read-reply)
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-previous-message)
