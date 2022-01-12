@@ -245,6 +245,22 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                       "forward"
                       (format "%s" uid)))
 
+(defun himalaya--send (message &optional account)
+  "Send MESSAGE using ACCOUNT."
+  (himalaya--run (when account (list "-a" account))
+                 "send"
+                 "--"
+                 message))
+
+(defun himalaya-send-buffer (&rest _)
+  "Send the current buffer as an email through himalaya.
+Processes the buffer to replace \n with \r\n and removes `mail-header-separator'."
+  (interactive)
+  (let* ((buf-string (substring-no-properties (buffer-string)))
+         (no-sep (replace-regexp-in-string mail-header-separator "" buf-string))
+         (email (replace-regexp-in-string "\r?\n" "\r\n" no-sep)))
+    (himalaya--send email himalaya-account)))
+
 (defun himalaya--message-flag-symbols (flags)
   "Generate a display string for FLAGS."
   (concat
@@ -371,9 +387,8 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (message-mode)
   ;; We do a little hacking
   (make-local-variable 'message-send-method-alist)
-  (setf (caddr (assoc 'mail message-send-method-alist))
-        ;; TODO: Fill this out to actually send
-        (lambda (&optional _arg) (message "we do a little hacking"))))
+  (setq message-send-method-alist
+        '((mail message-mail-p himalaya-send-buffer))))
 
 (defun himalaya-message-select ()
   "Read the message at point."
