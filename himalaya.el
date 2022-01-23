@@ -248,6 +248,15 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                       (format "%s" uid)
                       target))
 
+(defun himalaya--message-delete (uids &optional account mailbox)
+  "Delete messages with UIDS from MAILBOX on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, use the defaults.
+UIDS is a list of numbers."
+  (himalaya--run-json (when account (list "-a" account))
+                      (when mailbox (list "-m" mailbox))
+                      "delete"
+                      (mapconcat (lambda (uid) (format "%s" uid)) uids ",")))
+
 (defun himalaya--message-attachments (uid &optional account mailbox)
   "Download attachments from message with UID.
 If ACCOUNT or MAILBOX are nil, use the defaults."
@@ -281,6 +290,15 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                       "template"
                       "forward"
                       (format "%s" uid)))
+
+;; TODO: Connect this to a key
+(defun himalaya--save (message &optional account mailbox)
+  "Save MESSAGE to MAILBOX on ACCOUNT.
+If ACCOUNT or MAILBOX are nil, the defaults are used."
+  (himalaya--run-stdin message
+                       (when account (list "-a" account))
+                       (when mailbox (list "-m" mailbox))
+                       "save"))
 
 (defun himalaya--send (message &optional account)
   "Send MESSAGE using ACCOUNT."
@@ -452,6 +470,16 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (message "%s" (himalaya--message-move uid target himalaya-account himalaya-mailbox))
     (revert-buffer)))
 
+(defun himalaya-message-delete ()
+  "Delete the message at point."
+  (interactive)
+  (let* ((message (tabulated-list-get-entry))
+         (uid (substring-no-properties (elt message 0)))
+         (subject (substring-no-properties (elt message 2))))
+    (when (y-or-n-p (format "Delete email \"%s\"? " subject))
+      (himalaya--message-delete (list uid))
+      (revert-buffer))))
+
 (defun himalaya-forward-page ()
   "Go to the next page of the current mailbox."
   (interactive)
@@ -494,6 +522,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "j") #'himalaya-jump-to-page)
     (define-key map (kbd "C") #'himalaya-message-copy)
     (define-key map (kbd "M") #'himalaya-message-move)
+    (define-key map (kbd "D") #'himalaya-message-delete)
     (define-key map (kbd "w") #'himalaya-message-write)
     map))
 
@@ -513,7 +542,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
 
 (defvar himalaya-message-read-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "d") #'himalaya-message-read-download-attachments)
+    (define-key map (kbd "a") #'himalaya-message-read-download-attachments)
     (define-key map (kbd "R") #'himalaya-message-read-switch-raw)
     (define-key map (kbd "r") #'himalaya-message-read-reply)
     (define-key map (kbd "q") #'kill-current-buffer)
@@ -526,7 +555,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
 
 (defvar himalaya-message-read-raw-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "d") #'himalaya-message-read-download-attachments)
+    (define-key map (kbd "a") #'himalaya-message-read-download-attachments)
     (define-key map (kbd "R") #'himalaya-message-read-switch-plain)
     (define-key map (kbd "r") #'himalaya-message-read-reply)
     (define-key map (kbd "q") #'kill-current-buffer)

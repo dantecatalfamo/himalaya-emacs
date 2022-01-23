@@ -21,6 +21,7 @@
    | =w=   | Write message    |
    | =C=   | Copy message     |
    | =M=   | Move message     |
+   | =D=   | Delete message   |
    | =RET= | View message     |
 
 ** Read Message
@@ -30,7 +31,7 @@
 
    | Key | Action               |
    |-----+----------------------|
-   | =d= | Download attachments |
+   | =a= | Download attachments |
    | =n= | Next message         |
    | =p= | Previous message     |
    | =r= | Reply to message     |
