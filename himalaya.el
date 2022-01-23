@@ -151,6 +151,20 @@ displaus the output on non-zero exit."
         (error "Himalaya exited with a non-zero status"))
       output)))
 
+(defun himalaya--run-stdin (input &rest args)
+  "Run himalaya with ARGS, sending INPUT as stdin.
+Results are returned as a string. Signals a Lisp error and
+displays the output on non-zero exit."
+  (with-temp-buffer
+    (let* ((args (flatten-list args))
+           (ret (apply #'call-process-region input nil himalaya-executable nil t nil args))
+           (output (buffer-string)))
+      (unless (eq ret 0)
+        (with-current-buffer-window "*himalaya error*" nil nil
+          (insert output))
+        (error "Himalaya exited with a non-zero status"))
+      output)))
+
 (defun himalaya--run-json (&rest args)
   "Run himalaya with ARGS arguments.
 The result is parsed as JSON and returned."
@@ -247,10 +261,9 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 
 (defun himalaya--send (message &optional account)
   "Send MESSAGE using ACCOUNT."
-  (himalaya--run (when account (list "-a" account))
-                 "send"
-                 "--"
-                 message))
+  (himalaya--run-stdin message
+                       (when account (list "-a" account))
+                       "send"))
 
 (defun himalaya-send-buffer (&rest _)
   "Send the current buffer as an email through himalaya.
