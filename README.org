@@ -35,9 +35,11 @@
    | =n= | Next message         |
    | =p= | Previous message     |
    | =r= | Reply to message     |
+   | =f= | Forward message      |
    | =R= | View raw message     |
    | =q= | Kill buffer          |
 
 ** Write Message
 
-   When writing a new message or a reply, press =C-c C-c= to send it.
+   When writing a new message or a reply, press =C-c C-c= to send it
+   or =C-c C-k= to delete it.
