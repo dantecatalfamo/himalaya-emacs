@@ -28,13 +28,14 @@
    After pressing enter on a message, you'll enter the message viewing
    mode.
 
-   | Key | Action           |
-   |-----+------------------|
-   | =n= | Next message     |
-   | =p= | Previous message |
-   | =r= | Reply to message |
-   | =R= | View raw message |
-   | =q= | Kill buffer      |
+   | Key | Action               |
+   |-----+----------------------|
+   | =d= | Download attachments |
+   | =n= | Next message         |
+   | =p= | Previous message     |
+   | =r= | Reply to message     |
+   | =R= | View raw message     |
+   | =q= | Kill buffer          |
 
 ** Write Message
 
