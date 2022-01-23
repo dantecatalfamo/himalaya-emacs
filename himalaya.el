@@ -436,8 +436,16 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (interactive "P")
   (let ((template (himalaya--template-reply himalaya-uid himalaya-account himalaya-mailbox reply-all)))
     (switch-to-buffer (generate-new-buffer (format "*Reply: %s*" himalaya-subject)))
-    (insert template))
-  (himalaya--prepare-email-write-buffer (current-buffer)))
+    (insert template)
+    (himalaya--prepare-email-write-buffer (current-buffer))))
+
+(defun himalaya-message-read-forward ()
+  "Open a new buffer with a forward template to the current message."
+  (interactive)
+  (let ((template (himalaya--template-forward himalaya-uid himalaya-account himalaya-mailbox)))
+    (switch-to-buffer (generate-new-buffer (format "*Forward: %s*" himalaya-subject)))
+    (insert template)
+    (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-message-write ()
   "Open a new bugger for writing a message."
@@ -544,6 +552,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "a") #'himalaya-message-read-download-attachments)
     (define-key map (kbd "R") #'himalaya-message-read-switch-raw)
     (define-key map (kbd "r") #'himalaya-message-read-reply)
+    (define-key map (kbd "f") #'himalaya-message-read-forward)
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-previous-message)
@@ -557,6 +566,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "a") #'himalaya-message-read-download-attachments)
     (define-key map (kbd "R") #'himalaya-message-read-switch-plain)
     (define-key map (kbd "r") #'himalaya-message-read-reply)
+    (define-key map (kbd "f") #'himalaya-message-read-forward)
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-previous-message)
