@@ -435,8 +435,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 If called with \\[universal-argument], message will be REPLY-ALL."
   (interactive "P")
   (let ((template (himalaya--template-reply himalaya-uid himalaya-account himalaya-mailbox reply-all)))
-    (switch-to-buffer (format "*Reply: %s*" himalaya-subject))
-    (erase-buffer)
+    (switch-to-buffer (generate-new-buffer (format "*Reply: %s*" himalaya-subject)))
     (insert template))
   (himalaya--prepare-email-write-buffer (current-buffer)))
 
