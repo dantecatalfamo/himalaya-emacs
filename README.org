@@ -35,3 +35,7 @@
    | =r= | Reply to message |
    | =R= | View raw message |
    | =q= | Kill buffer      |
+
+** Write Message
+
+   When writing a new message or a reply, press =C-c C-c= to send it.
