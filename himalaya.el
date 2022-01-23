@@ -181,6 +181,21 @@ The result is parsed as JSON and returned."
     (goto-char (point-min))
     (mail-header-extract-no-properties)))
 
+(defun himalaya--prepare-email-write-buffer (buffer)
+  "Setup BUFFER to be used to write an email.
+Sets the mail function correctly, adds mail header, etc."
+  (with-current-buffer buffer
+    (goto-char (point-min))
+    (search-forward "\n\n")
+    (forward-line -1)
+    (insert mail-header-separator)
+    (forward-line)
+    (message-mode)
+    ;; We do a little hacking
+    (make-local-variable 'message-send-method-alist)
+    (setq message-send-method-alist
+          '((mail message-mail-p himalaya-send-buffer)))))
+
 (defun himalaya--mailbox-list (&optional account)
   "Return a list of mailboxes for ACCOUNT.
 If ACCOUNT is nil, the default account is used."
@@ -392,16 +407,15 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (switch-to-buffer (format "*Reply: %s*" himalaya-subject))
     (erase-buffer)
     (insert template))
-  (goto-char (point-min))
-  (search-forward "\n\n")
-  (forward-line -1)
-  (insert mail-header-separator)
-  (forward-line)
-  (message-mode)
-  ;; We do a little hacking
-  (make-local-variable 'message-send-method-alist)
-  (setq message-send-method-alist
-        '((mail message-mail-p himalaya-send-buffer))))
+  (himalaya--prepare-email-write-buffer (current-buffer)))
+
+(defun himalaya-message-write ()
+  "Open a new bugger for writing a message."
+  (interactive)
+  (let ((template (himalaya--template-new himalaya-account)))
+    (switch-to-buffer (generate-new-buffer "*Himalaya New Email*"))
+    (insert template))
+  (himalaya--prepare-email-write-buffer (current-buffer)))
 
 (defun himalaya-message-select ()
   "Read the message at point."
@@ -467,6 +481,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "j") #'himalaya-jump-to-page)
     (define-key map (kbd "C") #'himalaya-message-copy)
     (define-key map (kbd "M") #'himalaya-message-move)
+    (define-key map (kbd "w") #'himalaya-message-write)
     map))
 
 (define-derived-mode himalaya-message-list-mode tabulated-list-mode "Himylaya-Messages"
@@ -498,6 +513,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
 (defvar himalaya-message-read-raw-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "R") #'himalaya-message-read-switch-plain)
+    (define-key map (kbd "r") #'himalaya-message-read-reply)
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-previous-message)
