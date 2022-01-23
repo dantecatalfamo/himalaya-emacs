@@ -248,6 +248,14 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
                       (format "%s" uid)
                       target))
 
+(defun himalaya--message-attachments (uid &optional account mailbox)
+  "Download attachments from message with UID.
+If ACCOUNT or MAILBOX are nil, use the defaults."
+  (himalaya--run-json (when account (list "-a" account))
+                      (when mailbox (list "-m" mailbox))
+                      "attachments"
+                      (format "%s" uid)))
+
 (defun himalaya--template-new (&optional account)
   "Return a template for a new message from ACCOUNT."
   (himalaya--run-json (when account (list "-a" account))
@@ -399,6 +407,11 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
     (himalaya-message-read himalaya-uid himalaya-account himalaya-mailbox)
     (kill-buffer buf)))
 
+(defun himalaya-message-read-download-attachments ()
+  "Download any attachments on the current email."
+  (interactive)
+  (message (himalaya--message-attachments himalaya-uid himalaya-account himalaya-mailbox)))
+
 (defun himalaya-message-read-reply (&optional reply-all)
   "Open a new buffer with a reply template to the current message.
 If called with \\[universal-argument], message will be REPLY-ALL."
@@ -500,6 +513,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
 
 (defvar himalaya-message-read-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "d") #'himalaya-message-read-download-attachments)
     (define-key map (kbd "R") #'himalaya-message-read-switch-raw)
     (define-key map (kbd "r") #'himalaya-message-read-reply)
     (define-key map (kbd "q") #'kill-current-buffer)
@@ -512,6 +526,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
 
 (defvar himalaya-message-read-raw-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "d") #'himalaya-message-read-download-attachments)
     (define-key map (kbd "R") #'himalaya-message-read-switch-plain)
     (define-key map (kbd "r") #'himalaya-message-read-reply)
     (define-key map (kbd "q") #'kill-current-buffer)
