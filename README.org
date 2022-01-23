@@ -17,7 +17,7 @@
    | =f=   | Forward page     |
    | =b=   | Backwards page   |
    | =j=   | Jump to page     |
-   | =m=   | Switch mailboxe  |
+   | =m=   | Switch mailbox   |
    | =w=   | Write message    |
    | =C=   | Copy message     |
    | =M=   | Move message     |
