@@ -18,6 +18,7 @@
    | =b=   | Backwards page   |
    | =j=   | Jump to page     |
    | =m=   | Switch mailboxe  |
+   | =w=   | Write message    |
    | =C=   | Copy message     |
    | =M=   | Move message     |
    | =RET= | View message     |
@@ -31,5 +32,6 @@
    |-----+------------------|
    | =n= | Next message     |
    | =p= | Previous message |
+   | =r= | Reply to message |
    | =R= | View raw message |
    | =q= | Kill buffer      |
