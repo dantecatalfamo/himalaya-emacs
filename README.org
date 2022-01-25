@@ -3,8 +3,29 @@
 
   This is currently a work in progress.
 
-  Most settings can be customized through the Emacs Easy Customize
-  system. =M-x customize-group himalaya=
+** Installation
+
+   =himalaya-emacs= will be submitted to MELPA once it is stable.
+
+   Until then, you can easily install it using =use-package=.
+
+   1. Clone the repository using git to your desired location.
+      In this example I'll use
+      =~/src/github.com/dantecatalfamo/himalaya-emacs=.
+   2. Add the following =use-package= declaration to your =init.el=
+      #+begin_src emacs-lisp
+      (use-package himalaya
+        :if (file-exists-p "~/src/github.com/dantecatalfamo/himalaya-emacs")
+        :load-path "~/src/github.com/dantecatalfamo/himalaya-emacs")
+      #+end_src
+
+      This will load =himalaya-emacs= when it's available, but stop it
+      from throwing errors if you haven't cloned it.
+
+** Customization
+
+   Most settings can be customized through the Emacs Easy Customize
+   system. =M-x customize-group himalaya=
 
 ** List Messages
 
