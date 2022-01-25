@@ -343,7 +343,7 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
   "List messages in MAILBOX on ACCOUNT."
   (interactive)
   (setq account (or account himalaya-default-account))
-  (setq mailbox (or mailbox himalaya-default-account))
+  (setq mailbox (or mailbox himalaya-default-mailbox))
   (switch-to-buffer (concat "*Himalaya Mailbox"
                             (when (or account mailbox) ": ")
                             account
