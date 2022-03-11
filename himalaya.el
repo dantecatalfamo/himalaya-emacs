@@ -192,9 +192,7 @@ Sets the mail function correctly, adds mail header, etc."
     (forward-line)
     (message-mode)
     ;; We do a little hacking
-    (make-local-variable 'message-send-method-alist)
-    (setq message-send-method-alist
-          '((mail message-mail-p himalaya-send-buffer)))))
+    (setq-local message-send-mail-real-function 'himalaya-send-buffer)))
 
 (defun himalaya--mailbox-list (&optional account)
   "Return a list of mailboxes for ACCOUNT.
