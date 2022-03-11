@@ -388,7 +388,8 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
       (insert (propertize "Date: " 'face himalaya-headers-face)
               (alist-get 'date headers) "\n")
       (insert "\n")
-      (insert message))
+      (insert message)
+      (goto-char (point-min)))
     (himalaya-message-read-mode)
     (setq himalaya-account account)
     (setq himalaya-mailbox mailbox)
@@ -449,7 +450,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   "Open a new bugger for writing a message."
   (interactive)
   (let ((template (himalaya--template-new himalaya-account)))
-    (switch-to-buffer (generate-new-buffer "*Himalaya New Email*"))
+    (switch-to-buffer (generate-new-buffer "*Himalaya New Message*"))
     (insert template))
   (himalaya--prepare-email-write-buffer (current-buffer)))
 
@@ -481,7 +482,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (let* ((message (tabulated-list-get-entry))
          (uid (substring-no-properties (elt message 0)))
          (subject (substring-no-properties (elt message 2))))
-    (when (y-or-n-p (format "Delete email \"%s\"? " subject))
+    (when (y-or-n-p (format "Delete message \"%s\"? " subject))
       (himalaya--message-delete (list uid))
       (revert-buffer))))
 
