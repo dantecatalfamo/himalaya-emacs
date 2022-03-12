@@ -224,9 +224,10 @@ otherwise return the plain text version."
   (himalaya--run-json (when account (list "-a" account))
                       (when mailbox (list "-m" mailbox))
                       "read"
+		      (format "%s" uid) ; Ensure uid is a string
                       (when raw "-r")
                       (when html (list "-t" "html"))
-                      (format "%s" uid))) ; Ensure uid is a string
+		      (list "-h" "from" "to" "cc" "bcc" "subject" "date")))
 
 (defun himalaya--message-copy (uid target &optional account mailbox)
   "Copy message with UID from MAILBOX to TARGET mailbox on ACCOUNT.
@@ -368,29 +369,14 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
   "Display message UID from MAILBOX on ACCOUNT.
 If ACCOUNT or MAILBOX are nil, use the defaults."
   (let* ((message (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox)))
-         (message-raw (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox 'raw)))
-         (headers (himalaya--extract-headers message-raw)))
+         (headers (himalaya--extract-headers message)))
     (switch-to-buffer (format "*%s*" (alist-get 'subject headers)))
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert (propertize "From: " 'face himalaya-headers-face)
-              (alist-get 'from headers) "\n")
-      (insert (propertize "To: " 'face himalaya-headers-face)
-              (alist-get 'to headers) "\n")
-      (when (alist-get 'cc headers)
-        (insert (propertize "CC: " 'face himalaya-headers-face)
-                (alist-get 'cc headers) "\n"))
-      (when (alist-get 'bcc headers)
-        (insert (propertize "BCC: " 'face himalaya-headers-face)
-                (alist-get 'bcc headers) "\n"))
-      (insert (propertize "Subject: " 'face himalaya-headers-face)
-              (alist-get 'subject headers) "\n")
-      (insert (propertize "Date: " 'face himalaya-headers-face)
-              (alist-get 'date headers) "\n")
-      (insert "\n")
-      (insert message)
-      (goto-char (point-min)))
+    (erase-buffer)
+    (insert message)
+    (not-modified)
     (himalaya-message-read-mode)
+    (goto-char (point-min))
+    (setq buffer-read-only t)
     (setq himalaya-account account)
     (setq himalaya-mailbox mailbox)
     (setq himalaya-uid uid)
@@ -557,7 +543,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "p") #'himalaya-previous-message)
     map))
 
-(define-derived-mode himalaya-message-read-mode special-mode "Himalaya-Read"
+(define-derived-mode himalaya-message-read-mode message-mode "Himalaya-Read"
   "Himalaya email client message reading mode.")
 
 (defvar himalaya-message-read-raw-mode-map
@@ -571,7 +557,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "p") #'himalaya-previous-message)
     map))
 
-(define-derived-mode himalaya-message-read-raw-mode special-mode "Himalaya-Read-Raw"
+(define-derived-mode himalaya-message-read-raw-mode message-mode "Himalaya-Read-Raw"
   "Himalaya email client raw message mode.")
 
 (provide 'himalaya)
