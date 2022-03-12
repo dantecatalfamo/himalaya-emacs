@@ -222,11 +222,11 @@ non-nil, return the raw contents of the email including headers.
 If HTML is non-nil, return the HTML version of the email,
 otherwise return the plain text version."
   (himalaya--run-json (when account (list "-a" account))
-                      (when mailbox (list "-m" mailbox))
-                      "read"
+		      (when mailbox (list "-m" mailbox))
+		      "read"
 		      (format "%s" uid) ; Ensure uid is a string
-                      (when raw "-r")
-                      (when html (list "-t" "html"))
+		      (when raw "-r")
+		      (when html (list "-t" "html"))
 		      (list "-h" "from" "to" "cc" "bcc" "subject" "date")))
 
 (defun himalaya--message-copy (uid target &optional account mailbox)
