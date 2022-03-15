@@ -445,16 +445,20 @@ If called with \\[universal-argument], message will be REPLY-ALL."
 If called with \\[universal-argument], message will be REPLY-ALL."
   (interactive "P")
   (let* ((message (tabulated-list-get-entry))
-         (uid (substring-no-properties (elt message 0))))
+         (uid (substring-no-properties (elt message 0)))
+         (subject (substring-no-properties (elt message 2))))
     (setq himalaya-uid uid)
+    (setq himalaya-subject subject)
     (himalaya-message-read-reply reply-all)))
 
 (defun himalaya-message-forward ()
   "Forward the message at point."
   (interactive)
   (let* ((message (tabulated-list-get-entry))
-         (uid (substring-no-properties (elt message 0))))
+         (uid (substring-no-properties (elt message 0)))
+         (subject (substring-no-properties (elt message 2))))
     (setq himalaya-uid uid)
+    (setq himalaya-subject subject)
     (himalaya-message-read-forward)))
 
 (defun himalaya-message-select ()
