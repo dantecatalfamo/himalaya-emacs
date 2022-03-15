@@ -31,6 +31,7 @@
 
 ;; TODO: See `tablist-put-mark' as reference for tagging messages.
 ;; `package-menu-mark-install' and `package-menu-execute' are also good.
+;; TODO: Himalaya query support
 
 (require 'subr-x)
 (require 'mailheader)
