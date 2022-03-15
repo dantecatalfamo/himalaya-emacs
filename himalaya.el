@@ -375,7 +375,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
     (switch-to-buffer (format "*%s*" (alist-get 'subject headers)))
     (erase-buffer)
     (insert message)
-    (not-modified)
+    (set-buffer-modified-p nil)
     (himalaya-message-read-mode)
     (goto-char (point-min))
     (setq buffer-read-only t)
