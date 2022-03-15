@@ -192,9 +192,7 @@ Sets the mail function correctly, adds mail header, etc."
     (forward-line)
     (message-mode)
     ;; We do a little hacking
-    (make-local-variable 'message-send-method-alist)
-    (setq message-send-method-alist
-          '((mail message-mail-p himalaya-send-buffer)))))
+    (setq-local message-send-mail-real-function 'himalaya-send-buffer)))
 
 (defun himalaya--mailbox-list (&optional account)
   "Return a list of mailboxes for ACCOUNT.
@@ -224,11 +222,12 @@ non-nil, return the raw contents of the email including headers.
 If HTML is non-nil, return the HTML version of the email,
 otherwise return the plain text version."
   (himalaya--run-json (when account (list "-a" account))
-                      (when mailbox (list "-m" mailbox))
-                      "read"
-                      (when raw "-r")
-                      (when html (list "-t" "html"))
-                      (format "%s" uid))) ; Ensure uid is a string
+		      (when mailbox (list "-m" mailbox))
+		      "read"
+		      (format "%s" uid) ; Ensure uid is a string
+		      (when raw "-r")
+		      (when html (list "-t" "html"))
+		      (list "-h" "from" "to" "cc" "bcc" "subject" "date")))
 
 (defun himalaya--message-copy (uid target &optional account mailbox)
   "Copy message with UID from MAILBOX to TARGET mailbox on ACCOUNT.
@@ -370,28 +369,14 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
   "Display message UID from MAILBOX on ACCOUNT.
 If ACCOUNT or MAILBOX are nil, use the defaults."
   (let* ((message (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox)))
-         (message-raw (replace-regexp-in-string "" "" (himalaya--message-read uid account mailbox 'raw)))
-         (headers (himalaya--extract-headers message-raw)))
+         (headers (himalaya--extract-headers message)))
     (switch-to-buffer (format "*%s*" (alist-get 'subject headers)))
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert (propertize "From: " 'face himalaya-headers-face)
-              (alist-get 'from headers) "\n")
-      (insert (propertize "To: " 'face himalaya-headers-face)
-              (alist-get 'to headers) "\n")
-      (when (alist-get 'cc headers)
-        (insert (propertize "CC: " 'face himalaya-headers-face)
-                (alist-get 'cc headers) "\n"))
-      (when (alist-get 'bcc headers)
-        (insert (propertize "BCC: " 'face himalaya-headers-face)
-                (alist-get 'bcc headers) "\n"))
-      (insert (propertize "Subject: " 'face himalaya-headers-face)
-              (alist-get 'subject headers) "\n")
-      (insert (propertize "Date: " 'face himalaya-headers-face)
-              (alist-get 'date headers) "\n")
-      (insert "\n")
-      (insert message))
+    (erase-buffer)
+    (insert message)
+    (not-modified)
     (himalaya-message-read-mode)
+    (goto-char (point-min))
+    (setq buffer-read-only t)
     (setq himalaya-account account)
     (setq himalaya-mailbox mailbox)
     (setq himalaya-uid uid)
@@ -451,9 +436,33 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   "Open a new bugger for writing a message."
   (interactive)
   (let ((template (himalaya--template-new himalaya-account)))
-    (switch-to-buffer (generate-new-buffer "*Himalaya New Email*"))
+    (switch-to-buffer (generate-new-buffer "*Himalaya New Message*"))
     (insert template))
   (himalaya--prepare-email-write-buffer (current-buffer)))
+
+(defun himalaya-message-reply ()
+  "Reply to the message at point."
+  (interactive)
+  (let* ((message (tabulated-list-get-entry))
+         (uid (substring-no-properties (elt message 0))))
+    (setq himalaya-uid uid)
+    (himalaya-message-read-reply)))
+
+(defun himalaya-message-reply-all ()
+  "Reply all to the message at point."
+  (interactive)
+  (let* ((message (tabulated-list-get-entry))
+         (uid (substring-no-properties (elt message 0))))
+    (setq himalaya-uid uid)
+    (himalaya-message-read-reply t)))
+
+(defun himalaya-message-forward ()
+  "Forward the message at point."
+  (interactive)
+  (let* ((message (tabulated-list-get-entry))
+         (uid (substring-no-properties (elt message 0))))
+    (setq himalaya-uid uid)
+    (himalaya-message-read-forward)))
 
 (defun himalaya-message-select ()
   "Read the message at point."
@@ -483,7 +492,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (let* ((message (tabulated-list-get-entry))
          (uid (substring-no-properties (elt message 0)))
          (subject (substring-no-properties (elt message 2))))
-    (when (y-or-n-p (format "Delete email \"%s\"? " subject))
+    (when (y-or-n-p (format "Delete message \"%s\"? " subject))
       (himalaya--message-delete (list uid))
       (revert-buffer))))
 
@@ -531,6 +540,9 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "M") #'himalaya-message-move)
     (define-key map (kbd "D") #'himalaya-message-delete)
     (define-key map (kbd "w") #'himalaya-message-write)
+    (define-key map (kbd "r") #'himalaya-message-reply)
+    (define-key map (kbd "R") #'himalaya-message-reply-all)
+    (define-key map (kbd "F") #'himalaya-message-forward)
     map))
 
 (define-derived-mode himalaya-message-list-mode tabulated-list-mode "Himylaya-Messages"
@@ -558,7 +570,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "p") #'himalaya-previous-message)
     map))
 
-(define-derived-mode himalaya-message-read-mode special-mode "Himalaya-Read"
+(define-derived-mode himalaya-message-read-mode message-mode "Himalaya-Read"
   "Himalaya email client message reading mode.")
 
 (defvar himalaya-message-read-raw-mode-map
@@ -572,7 +584,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "p") #'himalaya-previous-message)
     map))
 
-(define-derived-mode himalaya-message-read-raw-mode special-mode "Himalaya-Read-Raw"
+(define-derived-mode himalaya-message-read-raw-mode message-mode "Himalaya-Read-Raw"
   "Himalaya email client raw message mode.")
 
 (provide 'himalaya)
