@@ -341,6 +341,7 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
         entries
       (nreverse entries))))
 
+;;;###autoload
 (defun himalaya-message-list (&optional account mailbox page)
   "List messages in MAILBOX on ACCOUNT."
   (interactive)
