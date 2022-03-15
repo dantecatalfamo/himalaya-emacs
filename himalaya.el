@@ -181,19 +181,19 @@ The result is parsed as JSON and returned."
   "Extract email headers from MESSAGE."
   (with-temp-buffer
     (insert message)
-    (goto-char (point-min))
     (mail-header-extract-no-properties)))
 
 (defun himalaya--prepare-email-write-buffer (buffer)
   "Setup BUFFER to be used to write an email.
 Sets the mail function correctly, adds mail header, etc."
   (with-current-buffer buffer
-    (goto-char (point-min))
+    (goto-line 1)
     (search-forward "\n\n")
     (forward-line -1)
     (insert mail-header-separator)
     (forward-line)
     (message-mode)
+    (set-buffer-modified-p nil)
     ;; We do a little hacking
     (setq-local message-send-mail-real-function 'himalaya-send-buffer)))
 
@@ -326,6 +326,9 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
 
 (defun himalaya--message-list-build-table ()
   "Construct the message list table."
+  (when (consp current-prefix-arg)
+    (setq himalaya-page 1)
+    (goto-line 1))
   (let ((messages (himalaya--message-list himalaya-account himalaya-mailbox himalaya-page))
         entries)
     (dolist (message messages entries)
@@ -379,7 +382,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
     (insert message)
     (set-buffer-modified-p nil)
     (himalaya-message-read-mode)
-    (goto-char (point-min))
+    (goto-line 1)
     (setq buffer-read-only t)
     (setq himalaya-account account)
     (setq himalaya-mailbox mailbox)
@@ -478,7 +481,8 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (interactive (list (completing-read "Copy to mailbox: " (himalaya--mailbox-list-names himalaya-account))))
   (let* ((message (tabulated-list-get-entry))
          (uid (substring-no-properties (elt message 0))))
-    (message "%s" (himalaya--message-copy uid target himalaya-account himalaya-mailbox))))
+    (message "%s" (himalaya--message-copy uid target himalaya-account himalaya-mailbox))
+    (revert-buffer)))
 
 (defun himalaya-message-move (target)
   "Move the message at point to TARGET mailbox."
