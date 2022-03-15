@@ -39,6 +39,8 @@
    | =b=   | Backwards page   |
    | =j=   | Jump to page     |
    | =m=   | Switch mailbox   |
+   | =R=   | Reply to message |
+   | =F=   | Forward message  |
    | =w=   | Write message    |
    | =C=   | Copy message     |
    | =M=   | Move message     |
@@ -59,6 +61,10 @@
    | =f= | Forward message      |
    | =R= | View raw message     |
    | =q= | Kill buffer          |
+
+** Reply All
+   Pressing the universal argument key (=C-u= by default) before
+   pressing the reply key will reply all to a message.
 
 ** Write Message
 
