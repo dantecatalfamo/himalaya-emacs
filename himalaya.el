@@ -430,6 +430,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (let ((template (himalaya--template-reply himalaya-uid himalaya-account himalaya-mailbox reply-all)))
     (switch-to-buffer (generate-new-buffer (format "*Reply: %s*" himalaya-subject)))
     (insert template)
+    (set-buffer-modified-p nil)
     (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-message-read-forward ()
@@ -438,6 +439,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (let ((template (himalaya--template-forward himalaya-uid himalaya-account himalaya-mailbox)))
     (switch-to-buffer (generate-new-buffer (format "*Forward: %s*" himalaya-subject)))
     (insert template)
+    (set-buffer-modified-p nil)
     (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-message-write ()
@@ -445,8 +447,9 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (interactive)
   (let ((template (himalaya--template-new himalaya-account)))
     (switch-to-buffer (generate-new-buffer "*Himalaya New Message*"))
-    (insert template))
-  (himalaya--prepare-email-write-buffer (current-buffer)))
+    (insert template)
+    (set-buffer-modified-p nil)
+    (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-message-reply (&optional reply-all)
   "Reply to the message at point.
