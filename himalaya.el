@@ -440,21 +440,14 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (insert template))
   (himalaya--prepare-email-write-buffer (current-buffer)))
 
-(defun himalaya-message-reply ()
-  "Reply to the message at point."
-  (interactive)
+(defun himalaya-message-reply (&optional reply-all)
+  "Reply to the message at point.
+If called with \\[universal-argument], message will be REPLY-ALL."
+  (interactive "P")
   (let* ((message (tabulated-list-get-entry))
          (uid (substring-no-properties (elt message 0))))
     (setq himalaya-uid uid)
-    (himalaya-message-read-reply)))
-
-(defun himalaya-message-reply-all ()
-  "Reply all to the message at point."
-  (interactive)
-  (let* ((message (tabulated-list-get-entry))
-         (uid (substring-no-properties (elt message 0))))
-    (setq himalaya-uid uid)
-    (himalaya-message-read-reply t)))
+    (himalaya-message-read-reply reply-all)))
 
 (defun himalaya-message-forward ()
   "Forward the message at point."
@@ -540,8 +533,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (define-key map (kbd "M") #'himalaya-message-move)
     (define-key map (kbd "D") #'himalaya-message-delete)
     (define-key map (kbd "w") #'himalaya-message-write)
-    (define-key map (kbd "r") #'himalaya-message-reply)
-    (define-key map (kbd "R") #'himalaya-message-reply-all)
+    (define-key map (kbd "R") #'himalaya-message-reply)
     (define-key map (kbd "F") #'himalaya-message-forward)
     map))
 
