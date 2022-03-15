@@ -3,6 +3,8 @@
 ;; Copyright (C) 2021 Dante Catalfamo
 
 ;; Author: Dante Catalfamo
+;; Package-Requires: ((emacs "27.1"))
+;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 
 ;; This file is not part of GNU Emacs
 
