@@ -187,7 +187,7 @@ The result is parsed as JSON and returned."
   "Setup BUFFER to be used to write an email.
 Sets the mail function correctly, adds mail header, etc."
   (with-current-buffer buffer
-    (goto-line 1)
+    (goto-char (point-min))
     (search-forward "\n\n")
     (forward-line -1)
     (insert mail-header-separator)
@@ -328,7 +328,7 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
   "Construct the message list table."
   (when (consp current-prefix-arg)
     (setq himalaya-page 1)
-    (goto-line 1))
+    (goto-char (point-min)))
   (let ((messages (himalaya--message-list himalaya-account himalaya-mailbox himalaya-page))
         entries)
     (dolist (message messages entries)
@@ -382,7 +382,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
     (insert message)
     (set-buffer-modified-p nil)
     (himalaya-message-read-mode)
-    (goto-line 1)
+    (goto-char (point-min))
     (setq buffer-read-only t)
     (setq himalaya-account account)
     (setq himalaya-mailbox mailbox)
