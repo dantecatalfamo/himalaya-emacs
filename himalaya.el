@@ -181,7 +181,6 @@ The result is parsed as JSON and returned."
   "Extract email headers from MESSAGE."
   (with-temp-buffer
     (insert message)
-    (goto-char (point-min))
     (mail-header-extract-no-properties)))
 
 (defun himalaya--prepare-email-write-buffer (buffer)
@@ -194,6 +193,7 @@ Sets the mail function correctly, adds mail header, etc."
     (insert mail-header-separator)
     (forward-line)
     (message-mode)
+    (set-buffer-modified-p nil)
     ;; We do a little hacking
     (setq-local message-send-mail-real-function 'himalaya-send-buffer)))
 
@@ -326,6 +326,9 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
 
 (defun himalaya--message-list-build-table ()
   "Construct the message list table."
+  (when (consp current-prefix-arg)
+    (setq himalaya-page 1)
+    (goto-char (point-min)))
   (let ((messages (himalaya--message-list himalaya-account himalaya-mailbox himalaya-page))
         entries)
     (dolist (message messages entries)
@@ -427,6 +430,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (let ((template (himalaya--template-reply himalaya-uid himalaya-account himalaya-mailbox reply-all)))
     (switch-to-buffer (generate-new-buffer (format "*Reply: %s*" himalaya-subject)))
     (insert template)
+    (set-buffer-modified-p nil)
     (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-message-read-forward ()
@@ -435,6 +439,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (let ((template (himalaya--template-forward himalaya-uid himalaya-account himalaya-mailbox)))
     (switch-to-buffer (generate-new-buffer (format "*Forward: %s*" himalaya-subject)))
     (insert template)
+    (set-buffer-modified-p nil)
     (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-message-write ()
@@ -442,8 +447,9 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (interactive)
   (let ((template (himalaya--template-new himalaya-account)))
     (switch-to-buffer (generate-new-buffer "*Himalaya New Message*"))
-    (insert template))
-  (himalaya--prepare-email-write-buffer (current-buffer)))
+    (insert template)
+    (set-buffer-modified-p nil)
+    (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-message-reply (&optional reply-all)
   "Reply to the message at point.
@@ -478,7 +484,8 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   (interactive (list (completing-read "Copy to mailbox: " (himalaya--mailbox-list-names himalaya-account))))
   (let* ((message (tabulated-list-get-entry))
          (uid (substring-no-properties (elt message 0))))
-    (message "%s" (himalaya--message-copy uid target himalaya-account himalaya-mailbox))))
+    (message "%s" (himalaya--message-copy uid target himalaya-account himalaya-mailbox))
+    (revert-buffer)))
 
 (defun himalaya-message-move (target)
   "Move the message at point to TARGET mailbox."
