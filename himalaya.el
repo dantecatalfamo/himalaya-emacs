@@ -125,14 +125,17 @@
   :group 'himalaya)
 
 
-(defvar-local himalaya-mailbox nil
+(defvar himalaya-mailbox nil
   "The current mailbox.")
 
-(defvar-local himalaya-account nil
+(defvar himalaya-account nil
   "The current account.")
 
-(defvar-local himalaya-uid nil
+(defvar himalaya-uid nil
   "The current message uid.")
+
+(defvar himalaya-reply nil
+  "True if the current message is a reply.")
 
 (defvar-local himalaya-subject nil
   "The current message subject.")
@@ -308,6 +311,16 @@ If ACCOUNT or MAILBOX are nil, the defaults are used."
                        (when account (list "-a" account))
                        "send"))
 
+(defun himalaya--add-flags (uid flags &optional account mailbox)
+  "Add FLAGS to message UID."
+  (himalaya--run-json
+   (when account (list "-a" account))
+   (when mailbox (list "-m" mailbox))
+   "flags"
+   "add"
+   uid
+   flags))
+
 (defun himalaya-send-buffer (&rest _)
   "Send the current buffer as an email through himalaya.
 Processes the buffer to replace \n with \r\n and removes `mail-header-separator'."
@@ -315,7 +328,8 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
   (let* ((buf-string (substring-no-properties (buffer-string)))
          (no-sep (replace-regexp-in-string mail-header-separator "" buf-string))
          (email (replace-regexp-in-string "\r?\n" "\r\n" no-sep)))
-    (himalaya--send email himalaya-account)))
+    (himalaya--send email himalaya-account)
+    (when himalaya-reply (himalaya--add-flags himalaya-uid "answered" himalaya-account himalaya-mailbox))))
 
 (defun himalaya--message-flag-symbols (flags)
   "Generate a display string for FLAGS."
@@ -425,6 +439,7 @@ If ACCOUNT or MAILBOX are nil, use the defaults."
 If called with \\[universal-argument], message will be REPLY-ALL."
   (interactive "P")
   (let ((template (himalaya--template-reply himalaya-uid himalaya-account himalaya-mailbox reply-all)))
+    (setq himalaya-reply t)
     (switch-to-buffer (generate-new-buffer (format "*Reply: %s*" himalaya-subject)))
     (insert template)
     (himalaya--prepare-email-write-buffer (current-buffer))))
@@ -433,6 +448,7 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   "Open a new buffer with a forward template to the current message."
   (interactive)
   (let ((template (himalaya--template-forward himalaya-uid himalaya-account himalaya-mailbox)))
+    (setq himalaya-reply nil)
     (switch-to-buffer (generate-new-buffer (format "*Forward: %s*" himalaya-subject)))
     (insert template)
     (himalaya--prepare-email-write-buffer (current-buffer))))
@@ -441,9 +457,10 @@ If called with \\[universal-argument], message will be REPLY-ALL."
   "Open a new bugger for writing a message."
   (interactive)
   (let ((template (himalaya--template-new himalaya-account)))
+    (setq himalaya-reply nil)
     (switch-to-buffer (generate-new-buffer "*Himalaya New Message*"))
-    (insert template))
-  (himalaya--prepare-email-write-buffer (current-buffer)))
+    (insert template)
+    (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-message-reply (&optional reply-all)
   "Reply to the message at point.
