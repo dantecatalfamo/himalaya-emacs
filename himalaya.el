@@ -331,7 +331,7 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
     (dolist (message messages entries)
       (push (list (plist-get message :id)
                   (vector
-                   (propertize (prin1-to-string (plist-get message :id)) 'face himalaya-id-face)
+                   (propertize (plist-get message :id) 'face himalaya-id-face)
                    (himalaya--message-flag-symbols (plist-get message :flags))
                    (plist-get message :subject)
                    (propertize (plist-get message :sender) 'face himalaya-sender-face)
