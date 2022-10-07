@@ -3,6 +3,7 @@
 ;; Copyright (C) 2021 Dante Catalfamo
 
 ;; Author: Dante Catalfamo
+;; Version: 0.1
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 
@@ -59,7 +60,7 @@
   :group 'himalaya)
 
 (defcustom himalaya-default-mailbox nil
-  "Ddefault mailbox for himalaya, overrides the himalaya config."
+  "Default mailbox for himalaya, overrides the himalaya config."
   :type '(choice (const :tag "None" nil)
                 (text :tag "String"))
   :group 'himalaya)
@@ -73,7 +74,6 @@
   "Font face for himalaya email IDs."
   :type 'face
   :group 'himalaya)
-
 (defcustom himalaya-sender-face font-lock-function-name-face
   "Font face for himalaya sender names."
   :type 'face
@@ -143,7 +143,7 @@
 (defun himalaya--run (&rest args)
   "Run himalaya with ARGS.
 Results are returned as a string. Signals a Lisp error and
-displaus the output on non-zero exit."
+displays the output on non-zero exit."
   (with-temp-buffer
     (let* ((args (flatten-list args))
            (ret (apply #'call-process himalaya-executable nil t nil args))
