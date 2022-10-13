@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2022-09-28
+### Added
 
-The source code has been forked from
-https://github.com/dantecatalfamo/himalaya-emacs and unmerged pull
-requests have been included in this first version. See
-[#12](https://github.com/dantecatalfamo/himalaya-emacs/issues/12#issuecomment-1260838684)
-for more details about the forking.
+* Moved code from a [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
+
+## [0.1] - 2022-10-09
+
+First plugin release to be added to the
+[MELPA](https://github.com/melpa/melpa/pull/7952) repository.
+
+[unreleased]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.1...HEAD
+[0.1]: https://github.com/dantecatalfamo/himalaya-emacs/releases/tag/v0.1
+
+[#15]: https://github.com/dantecatalfamo/himalaya-emacs/pull/15
