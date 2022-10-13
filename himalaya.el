@@ -28,7 +28,7 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
-;;
+
 ;; TODO: See `tablist-put-mark' as reference for tagging emails.
 ;; `package-menu-mark-install' and `package-menu-execute' are also good.
 ;; TODO: Himalaya query support
@@ -59,12 +59,12 @@
   :group 'himalaya)
 
 (defcustom himalaya-default-folder nil
-  "Ddefault folder for himalaya, overrides the himalaya config."
+  "Default folder for himalaya, overrides the himalaya config."
   :type '(choice (const :tag "None" nil)
                  (text :tag "String"))
   :group 'himalaya)
 
-(defcustom himalaya-page-size nil
+(defcustom himalaya-page-size 100
   "The number of emails to return per folder page."
   :type 'number
   :group 'himalaya)
@@ -95,22 +95,22 @@
   :group 'himalaya)
 
 (defcustom himalaya-headers-face font-lock-constant-face
-  "Font face for headers when reading a email."
+  "Font face for headers when reading an email."
   :type 'face
   :group 'himalaya)
 
 (defcustom himalaya-unseen-symbol "●"
-  "Symbol to display in the flags column when a email hasn't been read yet."
+  "Symbol to display in the flags column when an email hasn't been read yet."
   :type 'text
   :group 'himalaya)
 
 (defcustom himalaya-answered-symbol "↵"
-  "Symbol to display in the flags column when a email has been replied to."
+  "Symbol to display in the flags column when an email has been replied to."
   :type 'text
   :group 'himalaya)
 
 (defcustom himalaya-flagged-symbol "⚑"
-  "Symbol to display in the flags column when a email has been flagged."
+  "Symbol to display in the flags column when an email has been flagged."
   :type 'text
   :group 'himalaya)
 
@@ -146,7 +146,7 @@
 (defun himalaya--run (&rest args)
   "Run himalaya with ARGS.
 Results are returned as a string. Signals a Lisp error and
-displaus the output on non-zero exit."
+displays the output on non-zero exit."
   (with-temp-buffer
     (let* ((args (flatten-list args))
            (ret (apply #'call-process himalaya-executable nil t nil args))
@@ -230,6 +230,7 @@ otherwise return the plain text version."
 		      (when folder (list "-f" folder))
 		      "read"
 		      (format "%s" id) ; Ensure id is a string
+		      "-s"
 		      (when raw "-r")
 		      (when html (list "-t" "html"))
 		      (list "-h" "from" "to" "cc" "bcc" "subject" "date")))
@@ -458,7 +459,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (himalaya--prepare-email-write-buffer (current-buffer))))
 
 (defun himalaya-email-write ()
-  "Open a new bugger for writing a email."
+  "Open a new bugger for writing an email."
   (interactive)
   (let ((template (himalaya--template-new himalaya-account)))
     (setq himalaya-reply nil)
