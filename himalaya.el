@@ -183,6 +183,7 @@ The result is parsed as JSON and returned."
   "Extract email headers from EMAIL."
   (with-temp-buffer
     (insert email)
+    (goto-char (point-min))
     (mail-header-extract-no-properties)))
 
 (defun himalaya--prepare-email-write-buffer (buffer)

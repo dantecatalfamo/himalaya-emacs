@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Adjusted code for Himalaya
   [v0.6.2](https://github.com/soywod/himalaya/pull/433).
 
+### Fixed
+
+* Fixed `nil` subjects in read buffers.
+
 ## [0.1] - 2022-10-09
 
 First plugin release to be added to the
