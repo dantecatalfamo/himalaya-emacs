@@ -1,4 +1,4 @@
-;;; himalaya.el --- Interface for the himalaya email client -*- lexical-binding: t -*-
+;;; himalaya.el --- Interface for the himalaya email client  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
 ;; Copyright (C) 2022 soywod <clement.douin@posteo.net>
