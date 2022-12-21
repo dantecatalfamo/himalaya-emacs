@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2] - 2022-10-09
+
 ### Added
 
 * Included code from a [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
+
+### Changed
+
+* Adjusted code for Himalaya
+  [v0.6.2](https://github.com/soywod/himalaya/pull/433).
 
 ## [0.1] - 2022-10-09
 
