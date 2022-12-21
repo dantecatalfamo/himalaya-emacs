@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* Moved code from a [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
+* Included code from a [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
 
 ## [0.1] - 2022-10-09
 

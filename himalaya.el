@@ -1,4 +1,4 @@
-;;; himalaya.el --- Emacs plugin for email management.
+;;; himalaya.el --- Interface for the himalaya email client -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
 ;; Copyright (C) 2022 soywod <clement.douin@posteo.net>
@@ -233,7 +233,7 @@ otherwise return the plain text version."
 		      "-s"
 		      (when raw "-r")
 		      (when html (list "-t" "html"))
-		      (list "-h" "from" "to" "cc" "bcc" "subject" "date")))
+		      (list "-H" "From" "-H" "To" "-H" "Cc" "-H" "Bcc" "-H" "Subject" "-H" "Date")))
 
 (defun himalaya--email-copy (id target &optional account folder)
   "Copy email with ID from FOLDER to TARGET folder on ACCOUNT.
@@ -284,7 +284,7 @@ If REPLY-ALL is non-nil, the template will be generated as a reply all email."
                       (when folder (list "-f" folder))
                       "template"
                       "reply"
-                      (when reply-all "--all")
+                      (when reply-all "-a")
                       (format "%s" id)))
 
 (defun himalaya--template-forward (id &optional account folder)
@@ -509,7 +509,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (interactive (list (completing-read "Move to folder: " (himalaya--folder-list-names himalaya-account))))
   (let* ((email (tabulated-list-get-entry))
          (id (substring-no-properties (elt email 0))))
-    (email "%s" (himalaya--email-move id target himalaya-account himalaya-folder))
+    (message "%s" (himalaya--email-move id target himalaya-account himalaya-folder))
     (revert-buffer)))
 
 (defun himalaya-email-delete ()
@@ -518,7 +518,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (let* ((email (tabulated-list-get-entry))
          (id (substring-no-properties (elt email 0)))
          (subject (substring-no-properties (elt email 2))))
-    (when (y-or-n-p (format "Delete email \"%s\"? " subject))
+    (when (y-or-n-p (format "Delete email %s? " subject))
       (himalaya--email-delete (list id))
       (revert-buffer))))
 
