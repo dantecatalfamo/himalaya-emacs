@@ -129,17 +129,18 @@
   :group 'himalaya)
 
 
+(defvar himalaya-id nil
+  "The current email id.")
+
+(defvar himalaya-reply nil
+  "True if the current email is a reply.")
+
+
 (defvar-local himalaya-folder nil
   "The current folder.")
 
 (defvar-local himalaya-account nil
   "The current account.")
-
-(defvar-local himalaya-id nil
-  "The current email id.")
-
-(defvar-local himalaya-reply nil
-  "True if the current message is a reply.")
 
 (defvar-local himalaya-subject nil
   "The current email subject.")

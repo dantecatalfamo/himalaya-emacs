@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2] - 2022-12-21
-
 ### Added
 
 * Included code from a [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
@@ -21,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * Fixed `nil` subjects in read buffers.
+* Fixed `Answered` flag not set after replying to an email.
 
 ## [0.1] - 2022-10-09
 
