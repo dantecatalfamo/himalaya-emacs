@@ -249,8 +249,8 @@ If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "copy"
-		      target
-		      (mapconcat 'identity ids ",")))
+                      target
+                      (mapconcat 'identity ids ",")))
 
 (defun himalaya--email-move (ids target &optional account folder)
   "Move email with ID from FOLDER to TARGET folder on ACCOUNT.
@@ -258,8 +258,8 @@ If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "move"
-		      target
-		      (mapconcat 'identity ids ",")))
+                      target
+                      (mapconcat 'identity ids ",")))
 
 (defun himalaya--email-delete (ids &optional account folder)
   "Delete emails with IDS from FOLDER on ACCOUNT.
@@ -268,7 +268,7 @@ IDS is a list of numbers."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "delete"
-		      (mapconcat 'identity ids ",")))
+                      (mapconcat 'identity ids ",")))
 
 (defun himalaya--email-attachments (id &optional account folder)
   "Download attachments from email with ID.
@@ -597,7 +597,7 @@ TARGET folder."
   "Delete marked emails (or the email at point if no mark exist)."
   (interactive)
   (let* ((email (tabulated-list-get-entry))
-	 (id (tabulated-list-get-id))
+         (id (tabulated-list-get-id))
          (subject (substring-no-properties (elt email 2))))
     (if himalaya-marked-ids
 	(when (y-or-n-p (format "Delete emails %s? " (string-join himalaya-marked-ids ", ")))
