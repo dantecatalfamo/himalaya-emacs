@@ -27,6 +27,10 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+;;; Commentary:
+;; Interface for the himalaya email client
+;; https://github.com/soywod/himalaya
+
 ;;; Code:
 
 ;; TODO: See `tablist-put-mark' as reference for tagging emails.
