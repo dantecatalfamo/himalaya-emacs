@@ -33,9 +33,7 @@
 
 ;;; Code:
 
-;; TODO: See `tablist-put-mark' as reference for tagging emails.
-;; `package-menu-mark-install' and `package-menu-execute' are also good.
-;; TODO: Himalaya query support
+;; TODO: Himalaya query support (https://github.com/dantecatalfamo/himalaya-emacs/issues/4)
 
 (require 'subr-x)
 (require 'mailheader)
@@ -136,6 +134,9 @@
   "True if the current email is a reply.")
 
 
+(defvar-local himalaya-marked-ids nil
+  "The current marked email ids.")
+
 (defvar-local himalaya-folder nil
   "The current folder.")
 
@@ -213,6 +214,7 @@ If ACCOUNT is nil, the default account is used."
 (defun himalaya--folder-list-names (&optional account)
   "Return a list of folder names for ACCOUNT.
 If ACCOUNT is nil, the default account is used."
+  (message "Fetching folders…")
   (mapcar (lambda (folder) (plist-get folder :name))
           (himalaya--folder-list account)))
 
@@ -241,23 +243,23 @@ otherwise return the plain text version."
 		      (when html (list "-t" "html"))
 		      (list "-H" "From" "-H" "To" "-H" "Cc" "-H" "Bcc" "-H" "Subject" "-H" "Date")))
 
-(defun himalaya--email-copy (id target &optional account folder)
+(defun himalaya--email-copy (ids target &optional account folder)
   "Copy email with ID from FOLDER to TARGET folder on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "copy"
-                      (format "%s" id)
-                      target))
+		      target
+		      (mapconcat 'identity ids ",")))
 
-(defun himalaya--email-move (id target &optional account folder)
+(defun himalaya--email-move (ids target &optional account folder)
   "Move email with ID from FOLDER to TARGET folder on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "move"
-                      (format "%s" id)
-                      target))
+		      target
+		      (mapconcat 'identity ids ",")))
 
 (defun himalaya--email-delete (ids &optional account folder)
   "Delete emails with IDS from FOLDER on ACCOUNT.
@@ -266,7 +268,7 @@ IDS is a list of numbers."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "delete"
-                      (mapconcat (lambda (id) (format "%s" id)) ids ",")))
+		      (mapconcat 'identity ids ",")))
 
 (defun himalaya--email-attachments (id &optional account folder)
   "Download attachments from email with ID.
@@ -384,8 +386,77 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
   (setq mode-line-process (format " [Page %s]" himalaya-page))
   (revert-buffer))
 
+(defun himalaya--save-face-property (beg end)
+  ;; We need to distinguish ,,not set'' from ''no face''.
+  (unless (and (text-property-not-all beg end 'face nil) (< beg end))
+    (put-text-property beg (1+ beg) 'face 'default))
+  (unless (text-property-not-all beg end 'himalaya-saved-face nil)
+    (himalaya--copy-text-property beg end 'face 'himalaya-saved-face)))
+
+(defun himalaya--restore-face-property (beg end)
+  (when (text-property-not-all beg end 'himalaya-saved-face nil)
+    (himalaya--copy-text-property beg end 'himalaya-saved-face 'face)))
+
+(defun himalaya--copy-text-property (beg end from to)
+  "Copy text property FROM to TO in region BEG to END."
+  (let ((inhibit-read-only t))
+    (save-excursion
+      (while (< beg end)
+        (goto-char beg)
+        (put-text-property
+         (point)
+         (setq beg (next-single-property-change (point) from nil end))
+         to
+         (get-text-property (point) from))))))
+
 ;;;###autoload
 (defalias 'himalaya #'himalaya-email-list)
+
+(defun himalaya-mark-forward ()
+  "Mark the email at point and move the cursor to the next line."
+  (interactive)
+  (save-excursion
+    (let ((inhibit-read-only t))
+      (add-to-list 'himalaya-marked-ids (tabulated-list-get-id))
+      (tabulated-list-put-tag (string dired-marker-char))
+      (himalaya--save-face-property (point-at-bol) (point-at-eol))
+      (put-text-property (point-at-bol) (point-at-eol) 'face 'dired-marked)))
+  (next-line)
+  (goto-char (point-at-bol)))
+
+(defun himalaya-unmark-backward ()
+  "Unmark the email at point and move the cursor to the previous
+line."
+  (interactive)
+  (previous-line)
+  (goto-char (point-at-bol))
+  (let ((inhibit-read-only t))
+    (setq himalaya-marked-ids (remove (tabulated-list-get-id) himalaya-marked-ids))
+    (tabulated-list-put-tag "")
+    (himalaya--restore-face-property (point-at-bol) (point-at-eol))))
+
+(defun himalaya-unmark-forward ()
+  "Unmark the email at point and move the cursor to the next line."
+  (interactive)
+  (let ((inhibit-read-only t))
+    (setq himalaya-marked-ids (remove (tabulated-list-get-id) himalaya-marked-ids))
+    (tabulated-list-put-tag "")
+    (himalaya--restore-face-property (point-at-bol) (point-at-eol)))
+  (next-line)
+  (goto-char (point-at-bol)))
+
+(defun himalaya-unmark-all (&optional quiet)
+  "Unmark all marked emails."
+  (interactive)
+  (when himalaya-marked-ids    
+    (save-excursion
+      (let ((inhibit-read-only t))
+	(goto-char (point-min))
+	(while (re-search-forward (format "^[%s]" (string dired-marker-char)) nil t)
+	  (himalaya--restore-face-property (point-at-bol) (point-at-eol)))
+	(tabulated-list-clear-all-tags)))
+    (unless quiet (message "%d marks removed" (length himalaya-marked-ids)))
+    (setq himalaya-marked-ids nil)))
 
 (defun himalaya-switch-folder (folder)
   "Switch to FOLDER on the current email account."
@@ -503,30 +574,39 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (himalaya-email-read id himalaya-account himalaya-folder)))
 
 (defun himalaya-email-copy (target)
-  "Copy the email at point to TARGET folder."
+  "Copy marked emails (or the email at point if no mark exist) to
+TARGET folder."
   (interactive (list (completing-read "Copy to folder: " (himalaya--folder-list-names himalaya-account))))
-  (let* ((email (tabulated-list-get-entry))
-         (id (substring-no-properties (elt email 0))))
-    (message "%s" (himalaya--email-copy id target himalaya-account himalaya-folder))
-    (revert-buffer)))
+  (if (not himalaya-marked-ids)
+      (message "%s" (himalaya--email-copy (list (tabulated-list-get-id)) target himalaya-account himalaya-folder))
+    (message "%s" (himalaya--email-copy himalaya-marked-ids target himalaya-account himalaya-folder))
+    (himalaya-unmark-all t))
+  (revert-buffer))
 
 (defun himalaya-email-move (target)
-  "Move the email at point to TARGET folder."
+  "Move marked emails (or the email at point if no mark exist) to
+TARGET folder."
   (interactive (list (completing-read "Move to folder: " (himalaya--folder-list-names himalaya-account))))
-  (let* ((email (tabulated-list-get-entry))
-         (id (substring-no-properties (elt email 0))))
-    (message "%s" (himalaya--email-move id target himalaya-account himalaya-folder))
-    (revert-buffer)))
+  (if (not himalaya-marked-ids)
+      (message "%s" (himalaya--email-move (list (tabulated-list-get-id)) target himalaya-account himalaya-folder))
+    (message "%s" (himalaya--email-move himalaya-marked-ids target himalaya-account himalaya-folder))
+    (himalaya-unmark-all t))
+  (revert-buffer))
 
 (defun himalaya-email-delete ()
-  "Delete the email at point."
+  "Delete marked emails (or the email at point if no mark exist)."
   (interactive)
   (let* ((email (tabulated-list-get-entry))
-         (id (substring-no-properties (elt email 0)))
+	 (id (tabulated-list-get-id))
          (subject (substring-no-properties (elt email 2))))
-    (when (y-or-n-p (format "Delete email %s? " subject))
-      (himalaya--email-delete (list id))
-      (revert-buffer))))
+    (if himalaya-marked-ids
+	(when (y-or-n-p (format "Delete emails %s? " (string-join himalaya-marked-ids ", ")))
+	  (message "%s" (himalaya--email-delete himalaya-marked-ids))
+	  (himalaya-unmark-all)
+	  (revert-buffer))	
+      (when (y-or-n-p (format "Delete email %s? " subject))
+	(message "%s" (himalaya--email-delete (list id)))
+	(revert-buffer)))))
 
 (defun himalaya-forward-page ()
   "Go to the next page of the current folder."
@@ -563,7 +643,13 @@ If called with \\[universal-argument], email will be REPLY-ALL."
 
 (defvar himalaya-email-list-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "m") #'himalaya-switch-folder)
+    ;; Marks
+    (define-key map (kbd "DEL") #'himalaya-unmark-backward)
+    (define-key map (kbd "u") #'himalaya-unmark-forward)
+    (define-key map (kbd "U") #'himalaya-unmark-all)
+    (define-key map (kbd "m") #'himalaya-mark-forward)
+    
+    (define-key map (kbd "C-c f") #'himalaya-switch-folder)
     (define-key map (kbd "RET") #'himalaya-email-select)
     (define-key map (kbd "f") #'himalaya-forward-page)
     (define-key map (kbd "b") #'himalaya-backward-page)

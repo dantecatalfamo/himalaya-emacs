@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Included code from a [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
+* Added copy, move and delete many emails using marks (inspired by the
+  [tablist](https://github.com/politza/tablist) package).
 
 ### Changed
 
