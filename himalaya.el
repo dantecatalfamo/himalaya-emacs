@@ -268,15 +268,15 @@ IDS is a list of numbers."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "delete"
-		      ids))
+                      ids))
 
-(defun himalaya--email-attachments (id &optional account folder)
+(defun himalaya--email-attachments (ids &optional account folder)
   "Download attachments from email with ID.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "attachments"
-                      (format "%s" id)))
+                      ids))
 
 (defun himalaya--template-new (&optional account)
   "Return a template for a new email from ACCOUNT."
@@ -511,9 +511,10 @@ If ACCOUNT or FOLDER are nil, use the defaults."
     (kill-buffer buf)))
 
 (defun himalaya-email-read-download-attachments ()
-  "Download any attachments on the current email."
+  "Download all attachments of current email."
   (interactive)
-  (email (himalaya--email-attachments himalaya-id himalaya-account himalaya-folder)))
+  (message "Fetching attachments…")
+  (message "%s" (himalaya--email-attachments (list himalaya-id) himalaya-account himalaya-folder)))
 
 (defun himalaya-email-read-reply (&optional reply-all)
   "Open a new buffer with a reply template to the current email.
@@ -574,6 +575,16 @@ If called with \\[universal-argument], email will be REPLY-ALL."
          (id (substring-no-properties (elt email 0))))
     (himalaya-email-read id himalaya-account himalaya-folder)))
 
+(defun himalaya-email-download-attachments ()
+  "Download marked emails attachments (or the email at point if no
+mark exist)."
+  (interactive)
+  (message "Fetching attachments…")
+  (if (not himalaya-marked-ids)
+      (message "%s" (himalaya--email-attachments (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
+    (message "%s" (himalaya--email-attachments himalaya-marked-ids himalaya-account himalaya-folder))
+    (himalaya-unmark-all t)))
+
 (defun himalaya-email-copy (target)
   "Copy marked emails (or the email at point if no mark exist) to
 TARGET folder."
@@ -595,7 +606,8 @@ TARGET folder."
   (revert-buffer))
 
 (defun himalaya-email-delete ()
-  "Delete marked emails (or the email at point if no mark exist)."
+  "Delete marked emails (or the email at point if no mark
+exist)."
   (interactive)
   (let* ((email (tabulated-list-get-entry))
          (id (tabulated-list-get-id))
@@ -655,6 +667,7 @@ TARGET folder."
     (define-key map (kbd "f") #'himalaya-forward-page)
     (define-key map (kbd "b") #'himalaya-backward-page)
     (define-key map (kbd "j") #'himalaya-jump-to-page)
+    (define-key map (kbd "a") #'himalaya-email-download-attachments)
     (define-key map (kbd "C") #'himalaya-email-copy)
     (define-key map (kbd "M") #'himalaya-email-move)
     (define-key map (kbd "D") #'himalaya-email-delete)

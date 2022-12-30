@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Included code from a [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
-* Added copy, move and delete many emails using marks (inspired by the
-  [tablist](https://github.com/politza/tablist) package).
+* Added possibility to mark multiple emails. Compatible actions:
+  attachments, copy, move and delete. The implementation was inspired
+  by the [tablist](https://github.com/politza/tablist) package) [#17].
 
 ### Changed
 
@@ -32,3 +33,4 @@ First plugin release to be added to the
 [0.1]: https://github.com/dantecatalfamo/himalaya-emacs/releases/tag/v0.1
 
 [#15]: https://github.com/dantecatalfamo/himalaya-emacs/pull/15
+[#17]: https://github.com/dantecatalfamo/himalaya-emacs/pull/17
