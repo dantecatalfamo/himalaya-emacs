@@ -243,23 +243,23 @@ otherwise return the plain text version."
 		      (when html (list "-t" "html"))
 		      (list "-H" "From" "-H" "To" "-H" "Cc" "-H" "Bcc" "-H" "Subject" "-H" "Date")))
 
-(defun himalaya--email-copy (ids target &optional account folder)
+(defun himalaya--email-copy (target ids &optional account folder)
   "Copy email with ID from FOLDER to TARGET folder on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "copy"
                       target
-                      (mapconcat 'identity ids ",")))
+                      ids))
 
-(defun himalaya--email-move (ids target &optional account folder)
+(defun himalaya--email-move (target ids &optional account folder)
   "Move email with ID from FOLDER to TARGET folder on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "move"
                       target
-                      (mapconcat 'identity ids ",")))
+                      ids))
 
 (defun himalaya--email-delete (ids &optional account folder)
   "Delete emails with IDS from FOLDER on ACCOUNT.
@@ -268,7 +268,7 @@ IDS is a list of numbers."
   (himalaya--run-json (when account (list "-a" account))
                       (when folder (list "-f" folder))
                       "delete"
-                      (mapconcat 'identity ids ",")))
+		      ids))
 
 (defun himalaya--email-attachments (id &optional account folder)
   "Download attachments from email with ID.
@@ -327,6 +327,7 @@ If ACCOUNT or FOLDER are nil, the defaults are used."
    "flags"
    "add"
    id
+   "--"
    flags))
 
 (defun himalaya-send-buffer (&rest _)
@@ -578,8 +579,8 @@ If called with \\[universal-argument], email will be REPLY-ALL."
 TARGET folder."
   (interactive (list (completing-read "Copy to folder: " (himalaya--folder-list-names himalaya-account))))
   (if (not himalaya-marked-ids)
-      (message "%s" (himalaya--email-copy (list (tabulated-list-get-id)) target himalaya-account himalaya-folder))
-    (message "%s" (himalaya--email-copy himalaya-marked-ids target himalaya-account himalaya-folder))
+      (message "%s" (himalaya--email-copy target (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
+    (message "%s" (himalaya--email-copy target himalaya-marked-ids himalaya-account himalaya-folder))
     (himalaya-unmark-all t))
   (revert-buffer))
 
@@ -588,8 +589,8 @@ TARGET folder."
 TARGET folder."
   (interactive (list (completing-read "Move to folder: " (himalaya--folder-list-names himalaya-account))))
   (if (not himalaya-marked-ids)
-      (message "%s" (himalaya--email-move (list (tabulated-list-get-id)) target himalaya-account himalaya-folder))
-    (message "%s" (himalaya--email-move himalaya-marked-ids target himalaya-account himalaya-folder))
+      (message "%s" (himalaya--email-move target (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
+    (message "%s" (himalaya--email-move target himalaya-marked-ids himalaya-account himalaya-folder))
     (himalaya-unmark-all t))
   (revert-buffer))
 
@@ -601,11 +602,11 @@ TARGET folder."
          (subject (substring-no-properties (elt email 2))))
     (if himalaya-marked-ids
 	(when (y-or-n-p (format "Delete emails %s? " (string-join himalaya-marked-ids ", ")))
-	  (message "%s" (himalaya--email-delete himalaya-marked-ids))
-	  (himalaya-unmark-all)
+	  (message "%s" (himalaya--email-delete himalaya-marked-ids himalaya-account himalaya-folder))
+	  (himalaya-unmark-all t)
 	  (revert-buffer))	
       (when (y-or-n-p (format "Delete email %s? " subject))
-	(message "%s" (himalaya--email-delete (list id)))
+	(message "%s" (himalaya--email-delete (list id) himalaya-account himalaya-folder))
 	(revert-buffer)))))
 
 (defun himalaya-forward-page ()
