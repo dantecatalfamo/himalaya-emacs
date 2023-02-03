@@ -278,6 +278,13 @@ If ACCOUNT or FOLDER are nil, use the defaults."
                       "attachments"
                       ids))
 
+(defun himalaya--account-sync (&optional account)
+  "Synchronize the given account.
+If ACCOUNT is nil, use the defaults."
+  (himalaya--run-json (when account (list "-a" account))
+                      "accounts"
+                      "sync"))
+
 (defun himalaya--template-new (&optional account)
   "Return a template for a new email from ACCOUNT."
   (himalaya--run-json (when account (list "-a" account))
@@ -352,20 +359,26 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
   (when (consp current-prefix-arg)
     (setq himalaya-page 1)
     (goto-char (point-min)))
-  (let ((emails (himalaya--email-list himalaya-account himalaya-folder himalaya-page))
-        entries)
+  (let ((emails (himalaya--email-list himalaya-account himalaya-folder himalaya-page)) entries)
     (dolist (email emails entries)
       (push (list (plist-get email :id)
                   (vector
                    (propertize (plist-get email :id) 'face himalaya-id-face)
                    (himalaya--email-flag-symbols (plist-get email :flags))
                    (plist-get email :subject)
-                   (propertize (plist-get email :sender) 'face himalaya-sender-face)
+		   (himalaya--email-list-build-table-sender-column email)
                    (propertize (plist-get email :date) 'face himalaya-date-face)))
             entries))
     (if himalaya-email-order
         entries
       (nreverse entries))))
+
+(defun himalaya--email-list-build-table-sender-column (email)
+  "Construct the sender"
+  (let* ((from (plist-get email :from))
+	 (name (plist-get from :name))
+	 (addr (plist-get from :addr)))
+    (propertize (if (eq name :null) addr name) 'face himalaya-sender-face)))
 
 ;;;###autoload
 (defun himalaya-email-list (&optional account folder page)
@@ -568,6 +581,13 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (setq himalaya-subject subject)
     (himalaya-email-read-forward)))
 
+(defun himalaya-account-sync ()
+  "Synchronize the current account."
+  (interactive)
+  (message "Synchronizing account…")
+  (message "%s" (himalaya--account-sync himalaya-account))
+  (himalaya-email-list himalaya-account himalaya-folder himalaya-page))
+
 (defun himalaya-email-select ()
   "Read the email at point."
   (interactive)
@@ -674,6 +694,7 @@ exist)."
     (define-key map (kbd "w") #'himalaya-email-write)
     (define-key map (kbd "R") #'himalaya-email-reply)
     (define-key map (kbd "F") #'himalaya-email-forward)
+    (define-key map (kbd "s") #'himalaya-account-sync)
     map))
 
 (define-derived-mode himalaya-email-list-mode tabulated-list-mode "Himalaya-Emails"
@@ -682,7 +703,7 @@ exist)."
                                '("ID" 5 nil :right-align t)
                                '("Flags" 6 nil)
                                (list "Subject" himalaya-subject-width nil)
-                               (list "Sender" himalaya-from-width nil)
+                               (list "From" himalaya-from-width nil)
                                '("Date" 19 nil)))
   (setq tabulated-list-sort-key nil)
   (setq tabulated-list-entries #'himalaya--email-list-build-table)
