@@ -1,7 +1,4 @@
 * Himalaya Emacs
-  [[https://melpa.org/#/himalaya][file:https://melpa.org/packages/himalaya-badge.svg]]
-  
-
   Emacs front-end for the [[https://github.com/soywod/himalaya][himalaya]] email client.
 
   This is currently a work in progress.
@@ -30,46 +27,61 @@
    Most settings can be customized through the Emacs Easy Customize
    system. =M-x customize-group himalaya=
 
-** List Messages
+** List emails
 
-   =M-x himalaya= or =M-x himalaya-message-list=
+   =M-x himalaya= or =M-x himalaya-email-list=
 
-   | Key   | Action           |
-   |-------+------------------|
-   | =n=   | Move cursor down |
-   | =p=   | Move cursor up   |
-   | =f=   | Forward page     |
-   | =b=   | Backwards page   |
-   | =j=   | Jump to page     |
-   | =m=   | Switch mailbox   |
-   | =R=   | Reply to message |
-   | =F=   | Forward message  |
-   | =w=   | Write message    |
-   | =C=   | Copy message     |
-   | =M=   | Move message     |
-   | =D=   | Delete message   |
-   | =RET= | View message     |
+   | Key     | Action                                                  |
+   |---------+---------------------------------------------------------|
+   | =n=     | Move cursor down                                        |
+   | =p=     | Move cursor up                                          |
+   | =m=     | Mark email at cursor                                    |
+   | =u=     | Unmark email at cursor                                  |
+   | =DEL=   | Unmark email at cursor (backward)                       |
+   | =U=     | Unmark all emails                                       |
+   | =f=     | Forward page                                            |
+   | =b=     | Backward page                                           |
+   | =j=     | Jump to page                                            |
+   | =C-c f= | Switch folder                                           |
+   | =R=     | Reply to email at cursor                                |
+   | =F=     | Forward email at cursor                                 |
+   | =w=     | Write new email                                         |
+   | =a=     | Download marked emails (or email at cursor) attachments |
+   | =s=     | Synchronize current account                             |
+   | =C=     | Copy marked emails (or email at cursor)                 |
+   | =M=     | Move marked emails (or email at cursor)                 |
+   | =D=     | Delete marked emails (or email at cursor)               |
+   | =RET=   | Read email at cursor                                    |
 
-** Read Message
+** Read email
 
-   After pressing enter on a message, you'll enter the message viewing
+   After pressing enter on an email, you'll enter the email viewing
    mode.
 
    | Key | Action               |
    |-----+----------------------|
    | =a= | Download attachments |
-   | =n= | Next message         |
-   | =p= | Previous message     |
-   | =r= | Reply to message     |
-   | =f= | Forward message      |
-   | =R= | View raw message     |
+   | =n= | Next email           |
+   | =p= | Previous email       |
+   | =r= | Reply to email       |
+   | =f= | Forward email        |
+   | =R= | View raw email       |
    | =q= | Kill buffer          |
 
-** Reply All
+** Reply all
+
    Pressing the universal argument key (=C-u= by default) before
-   pressing the reply key will reply all to a message.
+   pressing the reply key will reply all to an email.
 
-** Write Message
+** Write new email
 
-   When writing a new message or a reply, press =C-c C-c= to send it
-   or =C-c C-k= to delete it.
+   When writing a new email or a reply, press =C-c C-c= to send it or
+   =C-c C-k= to delete it.
+
+** Credits
+
+[[https://nlnet.nl/logo/banner-160x60.png]]
+
+Special thanks to the [[https://nlnet.nl/project/Himalaya/index.html][nlnet]] foundation that helped Himalaya to receive
+financial support from the [[https://www.ngi.eu/ngi-projects/ngi-assure/][NGI Assure]] program of the European
+Commission in September, 2022.

@@ -1,0 +1,36 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+* Included code from a [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
+* Added possibility to mark multiple emails. Compatible actions:
+  attachments, copy, move and delete. The implementation was inspired
+  by the [tablist](https://github.com/politza/tablist) package) [#17].
+
+### Changed
+
+* Adjusted code for Himalaya
+  [v0.6.2](https://github.com/soywod/himalaya/pull/433).
+
+### Fixed
+
+* Fixed `nil` subjects in read buffers.
+* Fixed `Answered` flag not set after replying to an email.
+
+## [0.1] - 2022-10-09
+
+First plugin release to be added to the
+[MELPA](https://github.com/melpa/melpa/pull/7952) repository.
+
+[unreleased]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.1...HEAD
+[0.1]: https://github.com/dantecatalfamo/himalaya-emacs/releases/tag/v0.1
+
+[#15]: https://github.com/dantecatalfamo/himalaya-emacs/pull/15
+[#17]: https://github.com/dantecatalfamo/himalaya-emacs/pull/17
