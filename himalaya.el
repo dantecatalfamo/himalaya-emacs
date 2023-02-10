@@ -278,10 +278,12 @@ If ACCOUNT or FOLDER are nil, use the defaults."
                       "attachments"
                       ids))
 
-(defun himalaya--account-sync (&optional account)
+(defun himalaya--account-sync (&optional account folder)
   "Synchronize the given account.
-If ACCOUNT is nil, use the defaults."
+If ACCOUNT is nil, use the defaults. If FOLDER is nil, sync all
+the folders."
   (himalaya--run-json (when account (list "-a" account))
+                      (when folder (list "-f" folder))
                       "accounts"
                       "sync"))
 
@@ -581,11 +583,12 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (setq himalaya-subject subject)
     (himalaya-email-read-forward)))
 
-(defun himalaya-account-sync ()
-  "Synchronize the current account."
-  (interactive)
+(defun himalaya-account-sync (&optional sync-all)
+  "Synchronize the current folder of the current account. If
+called with \\[universal-argument], SYNC-ALL folders."
+  (interactive "P")
   (message "Synchronizing account…")
-  (message "%s" (himalaya--account-sync himalaya-account))
+  (message "%s" (himalaya--account-sync himalaya-account (if sync-all nil himalaya-folder)))
   (himalaya-email-list himalaya-account himalaya-folder himalaya-page))
 
 (defun himalaya-email-select ()
