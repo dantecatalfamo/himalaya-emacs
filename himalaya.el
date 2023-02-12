@@ -96,23 +96,37 @@
   :type 'face
   :group 'himalaya)
 
+(defcustom himalaya-deleted-face font-lock-keyword-face
+  "Font face for deleted email symbol."
+  :type 'face
+  :group 'himalaya)
+
 (defcustom himalaya-headers-face font-lock-constant-face
   "Font face for headers when reading an email."
   :type 'face
   :group 'himalaya)
 
 (defcustom himalaya-unseen-symbol "●"
-  "Symbol to display in the flags column when an email hasn't been read yet."
+  "Symbol to display in the flags column when an email hasn't been
+read yet."
   :type 'text
   :group 'himalaya)
 
 (defcustom himalaya-answered-symbol "↵"
-  "Symbol to display in the flags column when an email has been replied to."
+  "Symbol to display in the flags column when an email has been
+replied to."
   :type 'text
   :group 'himalaya)
 
 (defcustom himalaya-flagged-symbol "⚑"
-  "Symbol to display in the flags column when an email has been flagged."
+  "Symbol to display in the flags column when an email has been
+flagged."
+  :type 'text
+  :group 'himalaya)
+
+(defcustom himalaya-deleted-symbol "✘"
+  "Symbol to display in the flags column when an email has been
+marked for deletion."
   :type 'text
   :group 'himalaya)
 
@@ -217,6 +231,13 @@ If ACCOUNT is nil, the default account is used."
   (message "Fetching folders…")
   (mapcar (lambda (folder) (plist-get folder :name))
           (himalaya--folder-list account)))
+
+(defun himalaya--folder-expunge (&optional account folder)
+  "Delete all emails marked for deletion in FOLDER on ACCOUNT."
+  (himalaya--run-json (when account (list "-a" account))
+                      (when folder (list "-f" folder))
+                      "folder"
+		      "expunge"))
 
 (defun himalaya--email-list (&optional account folder page)
   "Return a list of emails from ACCOUNT in FOLDER.
@@ -354,7 +375,8 @@ Processes the buffer to replace \n with \r\n and removes `mail-header-separator'
   (concat
    (if (member "Seen" flags) " " (propertize himalaya-unseen-symbol 'face himalaya-unseen-face))
    (if (member "Answered" flags) himalaya-answered-symbol " ")
-   (if (member "Flagged" flags) (propertize himalaya-flagged-symbol 'face himalaya-flagged-face) " ")))
+   (if (member "Flagged" flags) (propertize himalaya-flagged-symbol 'face himalaya-flagged-face) " ")
+   (if (member "Deleted" flags) (propertize himalaya-deleted-symbol 'face himalaya-deleted-face) " ")))
 
 (defun himalaya--email-list-build-table ()
   "Construct the email list table."
@@ -644,6 +666,13 @@ exist)."
 	(message "%s" (himalaya--email-delete (list id) himalaya-account himalaya-folder))
 	(revert-buffer)))))
 
+(defun himalaya-folder-expunge ()
+  "Delete all emails marked for deletion."
+  (interactive)
+  (when (y-or-n-p (format "Expunge folder %s? " himalaya-folder))
+    (message "%s" (himalaya--folder-expunge himalaya-account himalaya-folder))
+    (revert-buffer)))
+
 (defun himalaya-forward-page ()
   "Go to the next page of the current folder."
   (interactive)
@@ -698,6 +727,7 @@ exist)."
     (define-key map (kbd "R") #'himalaya-email-reply)
     (define-key map (kbd "F") #'himalaya-email-forward)
     (define-key map (kbd "s") #'himalaya-account-sync)
+    (define-key map (kbd "e") #'himalaya-folder-expunge)
     map))
 
 (define-derived-mode himalaya-email-list-mode tabulated-list-mode "Himalaya-Emails"
