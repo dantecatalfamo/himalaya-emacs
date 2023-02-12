@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* Added `Deleted` char in flags column.
+* Added `expunge` command via keybind `e`.
+
 ## [0.3] - 2023-02-09
 
 The [0.2] has been reverted due to unintentional early merge, so the
