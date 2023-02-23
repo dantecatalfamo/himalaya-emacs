@@ -9,8 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* Added `Deleted` char in flags column.
-* Added `expunge` command via keybind `e`.
+- Added `Deleted` char in flags column.
+- Added `expunge` command via keybind `e`.
+
+### Fixed
+
+- Fixed `Answered` flag not set when sending an email from another
+  folder than `INBOX`.
 
 ## [0.3] - 2023-02-09
 
@@ -21,21 +26,21 @@ The [0.2] has been reverted due to unintentional early merge, so the
 
 ### Added
 
-* Included code from a
+- Included code from a
   [fork](https://git.sr.ht/~soywod/himalaya-emacs) [#15].
-* Added possibility to mark multiple emails. Compatible actions:
+- Added possibility to mark multiple emails. Compatible actions:
   attachments, copy, move and delete. The implementation was inspired
   by the [tablist](https://github.com/politza/tablist) package) [#17].
 
 ### Changed
 
-* Adjusted code for Himalaya CLI
+- Adjusted code for Himalaya CLI
   [v0.7.0](https://github.com/soywod/himalaya/pull/433).
 
 ### Fixed
 
-* Fixed `nil` subjects in read buffers.
-* Fixed `Answered` flag not set after replying to an email.
+- Fixed `nil` subjects in read buffers.
+- Fixed `Answered` flag not set after replying to an email.
 
 ## [0.1] - 2022-10-09
 

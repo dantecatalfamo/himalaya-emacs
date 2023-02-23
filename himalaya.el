@@ -147,15 +147,15 @@ marked for deletion."
 (defvar himalaya-reply nil
   "True if the current email is a reply.")
 
+(defvar himalaya-folder nil
+  "The current folder.")
+
+(defvar himalaya-account nil
+  "The current account.")
+
 
 (defvar-local himalaya-marked-ids nil
   "The current marked email ids.")
-
-(defvar-local himalaya-folder nil
-  "The current folder.")
-
-(defvar-local himalaya-account nil
-  "The current account.")
 
 (defvar-local himalaya-subject nil
   "The current email subject.")
@@ -322,7 +322,7 @@ If REPLY-ALL is non-nil, the template will be generated as a reply all email."
                       (when folder (list "-f" folder))
                       "template"
                       "reply"
-                      (when reply-all "-a")
+                      (when reply-all "-A")
                       (format "%s" id)))
 
 (defun himalaya--template-forward (id &optional account folder)
