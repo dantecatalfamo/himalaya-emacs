@@ -634,44 +634,48 @@ mark exist)."
   "Copy marked emails (or the email at point if no mark exist) to
 TARGET folder."
   (interactive (list (completing-read "Copy to folder: " (himalaya--folder-list-names himalaya-account))))
-  (if (not himalaya-marked-ids)
-      (message "%s" (himalaya--email-copy target (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
-    (message "%s" (himalaya--email-copy target himalaya-marked-ids himalaya-account himalaya-folder))
-    (himalaya-unmark-all t))
-  (revert-buffer))
+  (save-excursion
+    (if (not himalaya-marked-ids)
+        (message "%s" (himalaya--email-copy target (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
+      (message "%s" (himalaya--email-copy target himalaya-marked-ids himalaya-account himalaya-folder))
+      (himalaya-unmark-all t))
+    (revert-buffer)))
 
 (defun himalaya-email-move (target)
   "Move marked emails (or the email at point if no mark exist) to
 TARGET folder."
   (interactive (list (completing-read "Move to folder: " (himalaya--folder-list-names himalaya-account))))
-  (if (not himalaya-marked-ids)
-      (message "%s" (himalaya--email-move target (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
-    (message "%s" (himalaya--email-move target himalaya-marked-ids himalaya-account himalaya-folder))
-    (himalaya-unmark-all t))
-  (revert-buffer))
+  (save-excursion
+    (if (not himalaya-marked-ids)
+        (message "%s" (himalaya--email-move target (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
+      (message "%s" (himalaya--email-move target himalaya-marked-ids himalaya-account himalaya-folder))
+      (himalaya-unmark-all t))
+    (revert-buffer)))
 
 (defun himalaya-email-delete ()
   "Delete marked emails (or the email at point if no mark
 exist)."
   (interactive)
-  (let* ((email (tabulated-list-get-entry))
-         (id (tabulated-list-get-id))
-         (subject (substring-no-properties (elt email 2))))
-    (if himalaya-marked-ids
-	(when (y-or-n-p (format "Delete emails %s? " (string-join himalaya-marked-ids ", ")))
-	  (message "%s" (himalaya--email-delete himalaya-marked-ids himalaya-account himalaya-folder))
-	  (himalaya-unmark-all t)
-	  (revert-buffer))	
-      (when (y-or-n-p (format "Delete email %s? " subject))
-	(message "%s" (himalaya--email-delete (list id) himalaya-account himalaya-folder))
-	(revert-buffer)))))
+  (save-excursion
+    (let* ((email (tabulated-list-get-entry))
+           (id (tabulated-list-get-id))
+           (subject (substring-no-properties (elt email 2))))
+      (if himalaya-marked-ids
+          (when (y-or-n-p (format "Delete emails %s? " (string-join himalaya-marked-ids ", ")))
+            (message "%s" (himalaya--email-delete himalaya-marked-ids himalaya-account himalaya-folder))
+            (himalaya-unmark-all t)
+            (revert-buffer))
+        (when (y-or-n-p (format "Delete email %s? " subject))
+          (message "%s" (himalaya--email-delete (list id) himalaya-account himalaya-folder))
+          (revert-buffer))))))
 
 (defun himalaya-folder-expunge ()
   "Delete all emails marked for deletion."
   (interactive)
-  (when (y-or-n-p (format "Expunge folder %s? " himalaya-folder))
-    (message "%s" (himalaya--folder-expunge himalaya-account himalaya-folder))
-    (revert-buffer)))
+  (save-excursion
+    (when (y-or-n-p (format "Expunge folder %s? " himalaya-folder))
+      (message "%s" (himalaya--folder-expunge himalaya-account himalaya-folder))
+      (revert-buffer))))
 
 (defun himalaya-forward-page ()
   "Go to the next page of the current folder."
