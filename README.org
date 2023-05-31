@@ -53,6 +53,7 @@
    | =C=     | Copy marked emails (or email at cursor)                 |
    | =M=     | Move marked emails (or email at cursor)                 |
    | =D=     | Delete marked emails (or email at cursor)               |
+   | =e=     | Expunge current folder                                  |
    | =RET=   | Read email at cursor                                    |
 
 ** Read email
