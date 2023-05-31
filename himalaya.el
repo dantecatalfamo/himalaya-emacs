@@ -259,7 +259,6 @@ otherwise return the plain text version."
                       (when folder (list "-f" folder))
                       "read"
                       (format "%s" id) ; Ensure id is a string
-                      "-s"
                       (when raw "-r")
                       (when html (list "-t" "html"))
                       (list "-H" "From" "-H" "To" "-H" "Cc" "-H" "Bcc" "-H" "Subject" "-H" "Date")))
