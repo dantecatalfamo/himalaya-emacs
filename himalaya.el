@@ -220,6 +220,16 @@ Sets the mail function correctly, adds mail header, etc."
     ;; We do a little hacking
     (setq-local message-send-mail-real-function 'himalaya-send-buffer)))
 
+(defun himalaya--account-list ()
+  "Returns a list of accounts."
+  (himalaya--run-json "accounts" "list"))
+
+(defun himalaya--account-default ()
+  "Returns the default account."
+  (seq-filter
+   (lambda (a) (equal t (plist-get a :default)))
+   (himalaya--account-list)))
+
 (defun himalaya--folder-list (&optional account)
   "Return a list of folders for ACCOUNT.
 If ACCOUNT is nil, the default account is used."
@@ -484,7 +494,7 @@ line."
 (defun himalaya-unmark-all (&optional quiet)
   "Unmark all marked emails."
   (interactive)
-  (when himalaya-marked-ids    
+  (when himalaya-marked-ids
     (save-excursion
       (let ((inhibit-read-only t))
         (goto-char (point-min))
@@ -493,6 +503,12 @@ line."
         (tabulated-list-clear-all-tags)))
     (unless quiet (message "%d marks removed" (length himalaya-marked-ids)))
     (setq himalaya-marked-ids nil)))
+
+(defun himalaya-switch-account (account &optional folder page)
+  "Switch to ACCOUNT."
+  (interactive
+   (list (completing-read "Account: " (himalaya--account-list))))
+  (himalaya-email-list account))
 
 (defun himalaya-switch-folder (folder)
   "Switch to FOLDER on the current email account."
@@ -712,7 +728,8 @@ exist)."
     (define-key map (kbd "u") #'himalaya-unmark-forward)
     (define-key map (kbd "U") #'himalaya-unmark-all)
     (define-key map (kbd "m") #'himalaya-mark-forward)
-    
+
+    (define-key map (kbd "C-c a") #'himalaya-switch-account)
     (define-key map (kbd "C-c f") #'himalaya-switch-folder)
     (define-key map (kbd "RET") #'himalaya-email-select)
     (define-key map (kbd "f") #'himalaya-forward-page)

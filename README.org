@@ -44,6 +44,7 @@
    | =f=     | Forward page                                            |
    | =b=     | Backward page                                           |
    | =j=     | Jump to page                                            |
+   | =C-c a= | Switch account                                    |
    | =C-c f= | Switch folder                                           |
    | =R=     | Reply to email at cursor                                |
    | =F=     | Forward email at cursor                                 |
