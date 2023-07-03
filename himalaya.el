@@ -308,14 +308,17 @@ If ACCOUNT or FOLDER are nil, use the defaults."
                       "attachments"
                       ids))
 
-(defun himalaya--account-sync (&optional account folder)
+(defun himalaya--account-sync (callback &optional account folder)
   "Synchronize the given account.
 If ACCOUNT is nil, use the defaults. If FOLDER is nil, sync all
 the folders."
-  (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
-                      "accounts"
-                      "sync"))
+  (let ((command
+         (flatten-list
+          (list (when account (list "-a" account))
+                (when folder (list "-f" folder))
+                "accounts"
+                "sync"))))
+    (himalaya--async-run command callback)))
 
 (defun himalaya--template-new (&optional account)
   "Return a template for a new email from ACCOUNT."
@@ -619,13 +622,39 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (setq himalaya-subject subject)
     (himalaya-email-read-forward)))
 
+(defun himalaya--async-run (command callback)
+      "Asynchronously run himalaya with ARGS.
+CALLBACK is called with stdout string when himalaya exits.
+Signals a Lisp error and displays the output on non-zero exit."
+  (with-current-buffer (get-buffer-create "*himalaya stdout*")
+    (erase-buffer))
+  (make-process
+   :name "himalaya"
+   :buffer (get-buffer-create "*himalaya stdout*")
+   :stderr (get-buffer-create "*himalaya stderr*")
+   :command (cons himalaya-executable command)
+   :sentinel
+   (lambda (process event)
+     (when (eq (process-status process) 'exit)
+       (if (not (eq 0 (process-exit-status process)))
+           (with-current-buffer-window "*himalaya stderr*" nil nil
+               (error "Himalaya exited with a non-zero status"))
+         (funcall callback
+                  (with-current-buffer (process-buffer process)
+                    (goto-char (point-min))
+                    (buffer-string))))))))
+
 (defun himalaya-account-sync (&optional sync-all)
   "Synchronize the current folder of the current account. If
 called with \\[universal-argument], SYNC-ALL folders."
   (interactive "P")
   (message "Synchronizing account…")
-  (message "%s" (himalaya--account-sync himalaya-account (if sync-all nil himalaya-folder)))
-  (himalaya-email-list himalaya-account himalaya-folder himalaya-page))
+  (himalaya--account-sync
+   (lambda (stdout)
+     (message "%s" stdout)
+     (himalaya-email-list himalaya-account himalaya-folder himalaya-page))
+   himalaya-account
+   (if sync-all nil himalaya-folder)))
 
 (defun himalaya-email-select ()
   "Read the email at point."
