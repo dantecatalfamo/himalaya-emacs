@@ -619,6 +619,28 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (setq himalaya-subject subject)
     (himalaya-email-read-forward)))
 
+(defun himalaya--async-run (command callback)
+      "Asynchronously run himalaya with ARGS.
+CALLBACK is called with stdout string when himalaya exits.
+Signals a Lisp error and displays the output on non-zero exit."
+  (with-current-buffer (get-buffer-create "*himalaya stdout*")
+    (erase-buffer))
+  (make-process
+   :name "himalaya"
+   :buffer (get-buffer-create "*himalaya stdout*")
+   :stderr (get-buffer-create "*himalaya stderr*")
+   :command (cons himalaya-executable command)
+   :sentinel
+   (lambda (process event)
+     (when (eq (process-status process) 'exit)
+       (if (not (eq 0 (process-exit-status process)))
+           (with-current-buffer-window "*himalaya stderr*" nil nil
+               (error "Himalaya exited with a non-zero status"))
+         (funcall callback
+                  (with-current-buffer (process-buffer process)
+                    (goto-char (point-min))
+                    (buffer-string))))))))
+
 (defun himalaya-account-sync (&optional sync-all)
   "Synchronize the current folder of the current account. If
 called with \\[universal-argument], SYNC-ALL folders."
