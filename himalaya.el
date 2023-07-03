@@ -308,14 +308,17 @@ If ACCOUNT or FOLDER are nil, use the defaults."
                       "attachments"
                       ids))
 
-(defun himalaya--account-sync (&optional account folder)
+(defun himalaya--account-sync (callback &optional account folder)
   "Synchronize the given account.
 If ACCOUNT is nil, use the defaults. If FOLDER is nil, sync all
 the folders."
-  (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
-                      "accounts"
-                      "sync"))
+  (let ((command
+         (flatten-list
+          (list (when account (list "-a" account))
+                (when folder (list "-f" folder))
+                "accounts"
+                "sync"))))
+    (himalaya--async-run command callback)))
 
 (defun himalaya--template-new (&optional account)
   "Return a template for a new email from ACCOUNT."
@@ -646,8 +649,12 @@ Signals a Lisp error and displays the output on non-zero exit."
 called with \\[universal-argument], SYNC-ALL folders."
   (interactive "P")
   (message "Synchronizing account…")
-  (message "%s" (himalaya--account-sync himalaya-account (if sync-all nil himalaya-folder)))
-  (himalaya-email-list himalaya-account himalaya-folder himalaya-page))
+  (himalaya--account-sync
+   (lambda (stdout)
+     (message "%s" stdout)
+     (himalaya-email-list himalaya-account himalaya-folder himalaya-page))
+   himalaya-account
+   (if sync-all nil himalaya-folder)))
 
 (defun himalaya-email-select ()
   "Read the email at point."
