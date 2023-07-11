@@ -623,7 +623,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (himalaya-email-read-forward)))
 
 (defun himalaya--async-run (command callback)
-      "Asynchronously run himalaya with ARGS.
+  "Asynchronously run himalaya with ARGS.
 CALLBACK is called with stdout string when himalaya exits.
 Signals a Lisp error and displays the output on non-zero exit."
   (with-current-buffer (get-buffer-create "*himalaya stdout*")
@@ -651,7 +651,7 @@ called with \\[universal-argument], SYNC-ALL folders."
   (message "Synchronizing account…")
   (himalaya--account-sync
    (lambda (stdout)
-     (message "%s" stdout)
+     (message "%s" (string-trim stdout))
      (himalaya-email-list himalaya-account himalaya-folder himalaya-page))
    himalaya-account
    (if sync-all nil himalaya-folder)))
