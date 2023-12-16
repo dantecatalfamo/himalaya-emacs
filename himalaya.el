@@ -1,7 +1,7 @@
 ;;; himalaya.el --- Interface for the himalaya email client  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
-;; Copyright (C) 2022 soywod <clement.douin@posteo.net>
+;; Copyright (C) 2022-2023 soywod <clement.douin@posteo.net>
 
 ;; Author: Dante Catalfamo
 ;;      soywod <clement.douin@posteo.net>
@@ -186,7 +186,8 @@ displays the output on non-zero exit."
 (defun himalaya--run-json (&rest args)
   "Run himalaya with ARGS arguments.
 The result is parsed as JSON and returned."
-  (let ((args (append '("-o" "json") args)))
+  (let ((args (if himalaya-config-path (append (list "-c" himalaya-config-path) args) args))
+	(args (append '("-o" "json") args)))
     (json-parse-string (himalaya--run args)
                        :object-type 'plist
                        :array-type 'list)))
@@ -248,7 +249,7 @@ Sets the mail function correctly, adds mail header, etc."
 
 (defun himalaya--account-list ()
   "Returns a list of accounts."
-  (himalaya--run-json "accounts" "list"))
+  (himalaya--run-json "account" "list"))
 
 (defun himalaya--account-default ()
   "Returns the default account."
@@ -259,7 +260,7 @@ Sets the mail function correctly, adds mail header, etc."
 (defun himalaya--folder-list (&optional account)
   "Return a list of folders for ACCOUNT.
 If ACCOUNT is nil, the default account is used."
-  (himalaya--run-json (when account (list "-a" account)) "folders"))
+  (himalaya--run-json (when account (list "-a" account)) "folder" "list"))
 
 (defun himalaya--folder-list-names (&optional account)
   "Return a list of folder names for ACCOUNT.
@@ -271,67 +272,73 @@ If ACCOUNT is nil, the default account is used."
 (defun himalaya--folder-expunge (&optional account folder)
   "Delete all emails marked for deletion in FOLDER on ACCOUNT."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
                       "folder"
-                      "expunge"))
+                      "expunge"
+		      (when folder folder)))
 
-(defun himalaya--email-list (&optional account folder page)
+(defun himalaya--envelope-list (&optional account folder page)
   "Return a list of emails from ACCOUNT in FOLDER.
 Paginate using PAGE of PAGE-SIZE.
 If ACCOUNT, FOLDER, or PAGE are nil, the default values are used."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
+		      "envelope"
                       "list"
+		      (when folder folder)
                       (when page (list "-p" (format "%s" page)))
                       (when himalaya-page-size (list "-s" (prin1-to-string himalaya-page-size)))))
 
-(defun himalaya--email-read (id &optional account folder raw html)
+(defun himalaya--message-read (id &optional account folder raw html)
   "Return the contents of email with ID from FOLDER on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults. If RAW is
 non-nil, return the raw contents of the email including headers.
 If HTML is non-nil, return the HTML version of the email,
 otherwise return the plain text version."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
+		      "message"
                       "read"
                       (format "%s" id) ; Ensure id is a string
+		      (when folder (list "-f" folder))
                       (when raw "-r")
                       (when html (list "-t" "html"))
                       (list "-H" "From" "-H" "To" "-H" "Cc" "-H" "Bcc" "-H" "Subject" "-H" "Date")))
 
-(defun himalaya--email-copy (target ids &optional account folder)
+(defun himalaya--message-copy (source target ids &optional account)
   "Copy email with ID from FOLDER to TARGET folder on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
+		      "message"
                       "copy"
+		      source
                       target
                       ids))
 
-(defun himalaya--email-move (target ids &optional account folder)
+(defun himalaya--message-move (source target ids &optional account)
   "Move email with ID from FOLDER to TARGET folder on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
+		      "message"
                       "move"
+		      source
                       target
                       ids))
 
-(defun himalaya--email-delete (ids &optional account folder)
+(defun himalaya--message-delete (ids &optional account folder)
   "Delete emails with IDS from FOLDER on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults.
 IDS is a list of numbers."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
+                      "message"
                       "delete"
+		      (when folder (list "-f" folder))
                       ids))
 
-(defun himalaya--email-attachments (ids &optional account folder)
+(defun himalaya--attachment-download (ids &optional account folder)
   "Download attachments from email with ID.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
-                      "attachments"
+                      "attachment"
+		      "download"
+		      (when folder (list "-f" folder))
                       ids))
 
 (defun himalaya--account-sync (callback &optional account folder)
@@ -342,12 +349,12 @@ the folders."
          (flatten-list
           (list (when himalaya-config-path (list "-c" himalaya-config-path))
 		(when account (list "-a" account))
-                (when folder (list "-f" folder))
-                "accounts"
-                "sync"))))
+                "account"
+                "sync"
+		(when folder (list "-f" folder))))))
     (himalaya--async-run command callback)))
 
-(defun himalaya--template-new (&optional account)
+(defun himalaya--template-write (&optional account)
   "Return a template for a new email from ACCOUNT."
   (himalaya--run-json (when account (list "-a" account))
                       "template"
@@ -358,9 +365,9 @@ the folders."
 If ACCOUNT or FOLDER are nil, use the defaults.
 If REPLY-ALL is non-nil, the template will be generated as a reply all email."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
                       "template"
                       "reply"
+                      (when folder (list "-f" folder))
                       (when reply-all "-A")
                       (format "%s" id)))
 
@@ -368,9 +375,9 @@ If REPLY-ALL is non-nil, the template will be generated as a reply all email."
   "Return a forward template for email with ID from FOLDER on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
                       "template"
                       "forward"
+                      (when folder (list "-f" folder))
                       (format "%s" id)))
 
 (defun himalaya--template-send (template &optional account)
@@ -380,17 +387,16 @@ If ACCOUNT or FOLDER are nil, use the defaults."
 		       "template"
                        "send"))
 
-(defun himalaya--add-flags (id flags &optional account folder)
+(defun himalaya--flag-add (id flags &optional account folder)
   "Add FLAGS to email ID."
   (himalaya--run-json (when account (list "-a" account))
-                      (when folder (list "-f" folder))
                       "flags"
                       "add"
+                      (when folder (list "-f" folder))
                       id
-                      "--"
                       flags))
 
-(defun himalaya--email-flag-symbols (flags)
+(defun himalaya--envelope-flag-symbols (flags)
   "Generate a display string for FLAGS."
   (concat
    (if (member "Seen" flags) " " (propertize himalaya-unseen-symbol 'face himalaya-unseen-face))
@@ -398,26 +404,26 @@ If ACCOUNT or FOLDER are nil, use the defaults."
    (if (member "Flagged" flags) (propertize himalaya-flagged-symbol 'face himalaya-flagged-face) " ")
    (if (member "Deleted" flags) (propertize himalaya-deleted-symbol 'face himalaya-deleted-face) " ")))
 
-(defun himalaya--email-list-build-table ()
+(defun himalaya--envelope-list-build-table ()
   "Construct the email list table."
   (when (consp current-prefix-arg)
     (setq himalaya-page 1)
     (goto-char (point-min)))
-  (let ((emails (himalaya--email-list himalaya-account himalaya-folder himalaya-page)) entries)
+  (let ((emails (himalaya--envelope-list himalaya-account himalaya-folder himalaya-page)) entries)
     (dolist (email emails entries)
       (push (list (plist-get email :id)
                   (vector
                    (propertize (plist-get email :id) 'face himalaya-id-face)
-                   (himalaya--email-flag-symbols (plist-get email :flags))
+                   (himalaya--envelope-flag-symbols (plist-get email :flags))
                    (plist-get email :subject)
-                   (himalaya--email-list-build-table-sender-column email)
+                   (himalaya--envelope-list-build-table-sender-column email)
                    (propertize (plist-get email :date) 'face himalaya-date-face)))
             entries))
     (if himalaya-email-order
         entries
       (nreverse entries))))
 
-(defun himalaya--email-list-build-table-sender-column (email)
+(defun himalaya--envelope-list-build-table-sender-column (email)
   "Construct the sender"
   (let* ((from (plist-get email :from))
          (name (plist-get from :name))
@@ -425,7 +431,7 @@ If ACCOUNT or FOLDER are nil, use the defaults."
     (propertize (if (eq name :null) addr name) 'face himalaya-sender-face)))
 
 ;;;###autoload
-(defun himalaya-email-list (&optional account folder page)
+(defun himalaya-envelope-list (&optional account folder page)
   "List emails in FOLDER on ACCOUNT."
   (interactive)
   (setq account (or account himalaya-default-account))
@@ -437,7 +443,7 @@ If ACCOUNT or FOLDER are nil, use the defaults."
                             folder
                             "*"))
 
-  (himalaya-email-list-mode)
+  (himalaya-envelope-list-mode)
   (setq himalaya-folder folder)
   (setq himalaya-account account)
   (setq himalaya-page (or page himalaya-page))
@@ -468,7 +474,7 @@ If ACCOUNT or FOLDER are nil, use the defaults."
          (get-text-property (point) from))))))
 
 ;;;###autoload
-(defalias 'himalaya #'himalaya-email-list)
+(defalias 'himalaya #'himalaya-envelope-list)
 
 (defun himalaya-mark-forward ()
   "Mark the email at point and move the cursor to the next line."
@@ -520,17 +526,17 @@ line."
   "Switch to ACCOUNT."
   (interactive
    (list (completing-read "Account: " (himalaya--account-list))))
-  (himalaya-email-list account))
+  (himalaya-envelope-list account))
 
 (defun himalaya-switch-folder (folder)
   "Switch to FOLDER on the current email account."
   (interactive (list (completing-read "Folder: " (himalaya--folder-list-names himalaya-account))))
-  (himalaya-email-list himalaya-account folder))
+  (himalaya-envelope-list himalaya-account folder))
 
 (defun himalaya-email-read (id &optional account folder)
   "Display email ID from FOLDER on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
-  (let* ((email (replace-regexp-in-string "" "" (himalaya--email-read id account folder)))
+  (let* ((email (replace-regexp-in-string "" "" (himalaya--message-read id account folder)))
          (headers (himalaya--extract-headers email)))
     (switch-to-buffer (format "*%s*" (alist-get 'subject headers)))
     (erase-buffer)
@@ -547,7 +553,7 @@ If ACCOUNT or FOLDER are nil, use the defaults."
 (defun himalaya-email-read-raw (id &optional account folder)
   "Display raw email ID from FOLDER on ACCOUNT.
 If ACCOUNT or FOLDER are nil, use the defaults."
-  (let* ((email-raw (replace-regexp-in-string "" "" (himalaya--email-read id account folder 'raw)))
+  (let* ((email-raw (replace-regexp-in-string "" "" (himalaya--message-read id account folder 'raw)))
          (headers (himalaya--extract-headers email-raw)))
     (switch-to-buffer (format "*Raw: %s*" (alist-get 'subject headers)))
     (let ((inhibit-read-only t))
@@ -566,20 +572,20 @@ If ACCOUNT or FOLDER are nil, use the defaults."
     (himalaya-email-read-raw himalaya-id himalaya-account himalaya-folder)
     (kill-buffer buf)))
 
-(defun himalaya-email-read-switch-plain ()
+(defun himalaya-message-read-raw ()
   "Read a plain version of the current email."
   (interactive)
   (let ((buf (current-buffer)))
     (himalaya-email-read himalaya-id himalaya-account himalaya-folder)
     (kill-buffer buf)))
 
-(defun himalaya-email-read-download-attachments ()
+(defun himalaya-message-read-download-attachment ()
   "Download all attachments of current email."
   (interactive)
   (message "Fetching attachments…")
-  (message "%s" (himalaya--email-attachments (list himalaya-id) himalaya-account himalaya-folder)))
+  (message "%s" (himalaya--attachment-download (list himalaya-id) himalaya-account himalaya-folder)))
 
-(defun himalaya-email-read-reply (&optional reply-all)
+(defun himalaya-message-read-reply (&optional reply-all)
   "Open a new buffer with a reply template to the current email.
 If called with \\[universal-argument], email will be REPLY-ALL."
   (interactive "P")
@@ -590,7 +596,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (set-buffer-modified-p nil)
     (himalaya--prepare-email-write-buffer (current-buffer))))
 
-(defun himalaya-email-read-forward ()
+(defun himalaya-message-read-forward ()
   "Open a new buffer with a forward template to the current email."
   (interactive)
   (let ((template (himalaya--template-forward himalaya-id himalaya-account himalaya-folder)))
@@ -603,7 +609,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
 (defun himalaya-email-write ()
   "Open a new bugger for writing an email."
   (interactive)
-  (let ((template (himalaya--template-new himalaya-account)))
+  (let ((template (himalaya--template-write himalaya-account)))
     (setq himalaya-reply nil)
     (switch-to-buffer (generate-new-buffer "*Himalaya New Email*"))
     (insert template)
@@ -619,7 +625,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
          (subject (substring-no-properties (elt email 2))))
     (setq himalaya-id id)
     (setq himalaya-subject subject)
-    (himalaya-email-read-reply reply-all)))
+    (himalaya-message-read-reply reply-all)))
 
 (defun himalaya-email-forward ()
   "Forward the email at point."
@@ -629,7 +635,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
          (subject (substring-no-properties (elt email 2))))
     (setq himalaya-id id)
     (setq himalaya-subject subject)
-    (himalaya-email-read-forward)))
+    (himalaya-message-read-forward)))
 
 (defun himalaya-account-sync (&optional sync-all)
   "Synchronize the current folder of the current account. If
@@ -639,7 +645,7 @@ called with \\[universal-argument], SYNC-ALL folders."
   (himalaya--account-sync
    (lambda (stdout)
      (message "%s" (string-trim stdout))
-     (himalaya-email-list himalaya-account himalaya-folder himalaya-page))
+     (himalaya-envelope-list himalaya-account himalaya-folder himalaya-page))
    himalaya-account
    (if sync-all nil himalaya-folder)))
 
@@ -656,8 +662,8 @@ mark exist)."
   (interactive)
   (message "Fetching attachments…")
   (if (not himalaya-marked-ids)
-      (message "%s" (himalaya--email-attachments (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
-    (message "%s" (himalaya--email-attachments himalaya-marked-ids himalaya-account himalaya-folder))
+      (message "%s" (himalaya--attachment-download (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
+    (message "%s" (himalaya--attachment-download himalaya-marked-ids himalaya-account himalaya-folder))
     (himalaya-unmark-all t)))
 
 (defun himalaya-email-copy (target)
@@ -665,8 +671,8 @@ mark exist)."
 TARGET folder."
   (interactive (list (completing-read "Copy to folder: " (himalaya--folder-list-names himalaya-account))))
   (if (not himalaya-marked-ids)
-      (message "%s" (himalaya--email-copy target (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
-    (message "%s" (himalaya--email-copy target himalaya-marked-ids himalaya-account himalaya-folder)))
+      (message "%s" (himalaya--message-copy himalaya-folder target (list (tabulated-list-get-id)) himalaya-account))
+    (message "%s" (himalaya--message-copy himalaya-folder target himalaya-marked-ids himalaya-account)))
   (himalaya-unmark-all t)
   (revert-buffer t t t))
 
@@ -675,8 +681,8 @@ TARGET folder."
 TARGET folder."
   (interactive (list (completing-read "Move to folder: " (himalaya--folder-list-names himalaya-account))))
   (if (not himalaya-marked-ids)
-      (message "%s" (himalaya--email-move target (list (tabulated-list-get-id)) himalaya-account himalaya-folder))
-    (message "%s" (himalaya--email-move target himalaya-marked-ids himalaya-account himalaya-folder)))
+      (message "%s" (himalaya--message-move himalaya-folder target (list (tabulated-list-get-id)) himalaya-account))
+    (message "%s" (himalaya--message-move himalaya-folder target himalaya-marked-ids himalaya-account)))
   (himalaya-unmark-all t)
   (revert-buffer t t t))
 
@@ -689,11 +695,11 @@ exist)."
          (subject (substring-no-properties (elt email 2))))
     (if himalaya-marked-ids
         (when (y-or-n-p (format "Delete emails %s? " (string-join himalaya-marked-ids ", ")))
-          (message "%s" (himalaya--email-delete himalaya-marked-ids himalaya-account himalaya-folder))
+          (message "%s" (himalaya--message-delete himalaya-marked-ids himalaya-account himalaya-folder))
           (himalaya-unmark-all t)
           (revert-buffer t t t))
       (when (y-or-n-p (format "Delete email %s? " subject))
-        (message "%s" (himalaya--email-delete (list id) himalaya-account himalaya-folder))
+        (message "%s" (himalaya--message-delete (list id) himalaya-account himalaya-folder))
         (himalaya-unmark-all t)
         (revert-buffer t t t)))))
 
@@ -707,17 +713,17 @@ exist)."
 (defun himalaya-forward-page ()
   "Go to the next page of the current folder."
   (interactive)
-  (himalaya-email-list himalaya-account himalaya-folder (1+ himalaya-page)))
+  (himalaya-envelope-list himalaya-account himalaya-folder (1+ himalaya-page)))
 
 (defun himalaya-backward-page ()
   "Go to the previous page of the current folder."
   (interactive)
-  (himalaya-email-list himalaya-account himalaya-folder (max 1 (1- himalaya-page))))
+  (himalaya-envelope-list himalaya-account himalaya-folder (max 1 (1- himalaya-page))))
 
 (defun himalaya-jump-to-page (page)
   "Jump to PAGE of current folder."
   (interactive "nJump to page: ")
-  (himalaya-email-list himalaya-account himalaya-folder (max 1 page)))
+  (himalaya-envelope-list himalaya-account himalaya-folder (max 1 page)))
 
 (defun himalaya-next-email ()
   "Go to the next email."
@@ -737,7 +743,7 @@ exist)."
                        himalaya-account
                        himalaya-folder))
 
-(defvar himalaya-email-list-mode-map
+(defvar himalaya-envelope-list-mode-map
   (let ((map (make-sparse-keymap)))
     ;; Marks
     (define-key map (kbd "DEL") #'himalaya-unmark-backward)
@@ -762,7 +768,7 @@ exist)."
     (define-key map (kbd "e") #'himalaya-folder-expunge)
     map))
 
-(define-derived-mode himalaya-email-list-mode tabulated-list-mode "Himalaya-Emails"
+(define-derived-mode himalaya-envelope-list-mode tabulated-list-mode "Himalaya-Emails"
   "Himalaya email client email list mode."
   (setq tabulated-list-format (vector
                                '("ID" 5 nil :right-align t)
@@ -771,37 +777,37 @@ exist)."
                                (list "From" himalaya-from-width nil)
                                '("Date" 19 nil)))
   (setq tabulated-list-sort-key nil)
-  (setq tabulated-list-entries #'himalaya--email-list-build-table)
+  (setq tabulated-list-entries #'himalaya--envelope-list-build-table)
   (setq tabulated-list-padding 1)
   (tabulated-list-init-header)
   (hl-line-mode))
 
-(defvar himalaya-email-read-mode-map
+(defvar himalaya-message-read-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "a") #'himalaya-email-read-download-attachments)
-    (define-key map (kbd "R") #'himalaya-email-read-switch-raw)
-    (define-key map (kbd "r") #'himalaya-email-read-reply)
-    (define-key map (kbd "f") #'himalaya-email-read-forward)
+    (define-key map (kbd "a") #'himalaya-message-read-download-attachment)
+    (define-key map (kbd "R") #'himalaya-message-read-raw)
+    (define-key map (kbd "r") #'himalaya-message-read-reply)
+    (define-key map (kbd "f") #'himalaya-message-read-forward)
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-email)
     (define-key map (kbd "p") #'himalaya-previous-email)
     map))
 
-(define-derived-mode himalaya-email-read-mode message-mode "Himalaya-Read"
+(define-derived-mode himalaya-message-read-mode message-mode "Himalaya-Read"
   "Himalaya email client email reading mode.")
 
-(defvar himalaya-email-read-raw-mode-map
+(defvar himalaya-message-read-raw-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "a") #'himalaya-email-read-download-attachments)
-    (define-key map (kbd "R") #'himalaya-email-read-switch-plain)
-    (define-key map (kbd "r") #'himalaya-email-read-reply)
-    (define-key map (kbd "f") #'himalaya-email-read-forward)
+    (define-key map (kbd "a") #'himalaya-message-read-download-attachment)
+    (define-key map (kbd "R") #'himalaya-message-read)
+    (define-key map (kbd "r") #'himalaya-message-read-reply)
+    (define-key map (kbd "f") #'himalaya-message-read-forward)
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-email)
     (define-key map (kbd "p") #'himalaya-previous-email)
     map))
 
-(define-derived-mode himalaya-email-read-raw-mode message-mode "Himalaya-Read-Raw"
+(define-derived-mode himalaya-message-read-raw-mode message-mode "Himalaya-Read-Raw"
   "Himalaya email client raw email mode.")
 
 (provide 'himalaya)
