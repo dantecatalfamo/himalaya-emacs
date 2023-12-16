@@ -48,6 +48,11 @@
   :type 'text
   :group 'himalaya)
 
+(defcustom himalaya-config-path nil
+  "Name or location of the himalaya configuration file."
+  :type '(file :must-match t)
+  :group 'himalaya)
+
 (defcustom himalaya-email-order nil
   "Order of how emails are displayed on each page of the folder."
   :type '(radio (const :tag "Ascending (oldest first)" t)
@@ -168,7 +173,8 @@ marked for deletion."
 Results are returned as a string. Signals a Lisp error and
 displays the output on non-zero exit."
   (with-temp-buffer
-    (let* ((args (flatten-list args))
+    (let* ((args (if himalaya-config-path (append (list "-c" himalaya-config-path) args) args))
+	   (args (flatten-list args))
            (ret (apply #'call-process himalaya-executable nil t nil args))
            (output (buffer-string)))
       (unless (eq ret 0)
@@ -176,6 +182,14 @@ displays the output on non-zero exit."
           (insert output))
         (error "Himalaya exited with a non-zero status"))
       output)))
+
+(defun himalaya--run-json (&rest args)
+  "Run himalaya with ARGS arguments.
+The result is parsed as JSON and returned."
+  (let ((args (append '("-o" "json") args)))
+    (json-parse-string (himalaya--run args)
+                       :object-type 'plist
+                       :array-type 'list)))
 
 (defun himalaya--run-stdin (input &rest args)
   "Run himalaya with ARGS, sending INPUT as stdin.
@@ -191,13 +205,27 @@ displays the output on non-zero exit."
         (error "Himalaya exited with a non-zero status"))
       output)))
 
-(defun himalaya--run-json (&rest args)
-  "Run himalaya with ARGS arguments.
-The result is parsed as JSON and returned."
-  (let ((args (append '("-o" "json") args)))
-    (json-parse-string (himalaya--run args)
-                       :object-type 'plist
-                       :array-type 'list)))
+(defun himalaya--async-run (command callback)
+  "Asynchronously run himalaya with ARGS.
+CALLBACK is called with stdout string when himalaya exits.
+Signals a Lisp error and displays the output on non-zero exit."
+  (with-current-buffer (get-buffer-create "*himalaya stdout*")
+    (erase-buffer))
+  (make-process
+   :name "himalaya"
+   :buffer (get-buffer-create "*himalaya stdout*")
+   :stderr (get-buffer-create "*himalaya stderr*")
+   :command (cons himalaya-executable command)
+   :sentinel
+   (lambda (process event)
+     (when (eq (process-status process) 'exit)
+       (if (not (eq 0 (process-exit-status process)))
+           (with-current-buffer-window "*himalaya stderr*" nil nil
+               (error "Himalaya exited with a non-zero status"))
+         (funcall callback
+                  (with-current-buffer (process-buffer process)
+                    (goto-char (point-min))
+                    (buffer-string))))))))
 
 (defun himalaya--extract-headers (email)
   "Extract email headers from EMAIL."
@@ -216,9 +244,7 @@ Sets the mail function correctly, adds mail header, etc."
     (insert mail-header-separator)
     (forward-line)
     (message-mode)
-    (set-buffer-modified-p nil)
-    ;; We do a little hacking
-    (setq-local message-send-mail-real-function 'himalaya-send-buffer)))
+    (set-buffer-modified-p nil)))
 
 (defun himalaya--account-list ()
   "Returns a list of accounts."
@@ -314,7 +340,8 @@ If ACCOUNT is nil, use the defaults. If FOLDER is nil, sync all
 the folders."
   (let ((command
          (flatten-list
-          (list (when account (list "-a" account))
+          (list (when himalaya-config-path (list "-c" himalaya-config-path))
+		(when account (list "-a" account))
                 (when folder (list "-f" folder))
                 "accounts"
                 "sync"))))
@@ -346,19 +373,11 @@ If ACCOUNT or FOLDER are nil, use the defaults."
                       "forward"
                       (format "%s" id)))
 
-;; TODO: Connect this to a key
-(defun himalaya--save (email &optional account folder)
-  "Save EMAIL to FOLDER on ACCOUNT.
-If ACCOUNT or FOLDER are nil, the defaults are used."
-  (himalaya--run-stdin email
+(defun himalaya--template-send (template &optional account)
+  "Sends TEMPLATE using ACCOUNT."
+  (himalaya--run-stdin template
                        (when account (list "-a" account))
-                       (when folder (list "-f" folder))
-                       "save"))
-
-(defun himalaya--send (email &optional account)
-  "Send EMAIL using ACCOUNT."
-  (himalaya--run-stdin email
-                       (when account (list "-a" account))
+		       "template"
                        "send"))
 
 (defun himalaya--add-flags (id flags &optional account folder)
@@ -370,16 +389,6 @@ If ACCOUNT or FOLDER are nil, the defaults are used."
                       id
                       "--"
                       flags))
-
-(defun himalaya-send-buffer (&rest _)
-  "Send the current buffer as an email through himalaya.
-Processes the buffer to replace \n with \r\n and removes `mail-header-separator'."
-  (interactive)
-  (let* ((buf-string (substring-no-properties (buffer-string)))
-         (no-sep (replace-regexp-in-string mail-header-separator "" buf-string))
-         (email (replace-regexp-in-string "\r?\n" "\r\n" no-sep)))
-    (himalaya--send email himalaya-account)
-    (when himalaya-reply (himalaya--add-flags himalaya-id "Answered" himalaya-account himalaya-folder))))
 
 (defun himalaya--email-flag-symbols (flags)
   "Generate a display string for FLAGS."
@@ -621,28 +630,6 @@ If called with \\[universal-argument], email will be REPLY-ALL."
     (setq himalaya-id id)
     (setq himalaya-subject subject)
     (himalaya-email-read-forward)))
-
-(defun himalaya--async-run (command callback)
-  "Asynchronously run himalaya with ARGS.
-CALLBACK is called with stdout string when himalaya exits.
-Signals a Lisp error and displays the output on non-zero exit."
-  (with-current-buffer (get-buffer-create "*himalaya stdout*")
-    (erase-buffer))
-  (make-process
-   :name "himalaya"
-   :buffer (get-buffer-create "*himalaya stdout*")
-   :stderr (get-buffer-create "*himalaya stderr*")
-   :command (cons himalaya-executable command)
-   :sentinel
-   (lambda (process event)
-     (when (eq (process-status process) 'exit)
-       (if (not (eq 0 (process-exit-status process)))
-           (with-current-buffer-window "*himalaya stderr*" nil nil
-               (error "Himalaya exited with a non-zero status"))
-         (funcall callback
-                  (with-current-buffer (process-buffer process)
-                    (goto-char (point-min))
-                    (buffer-string))))))))
 
 (defun himalaya-account-sync (&optional sync-all)
   "Synchronize the current folder of the current account. If
