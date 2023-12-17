@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `Deleted` char in flags column.
 - Added `expunge` command via keybind `e`.
 
+### Changed
+
+- Renamed option `himalaya-email-order` to `himalaya-envelope-list-order`.
+
 ### Fixed
 
 - Fixed `Answered` flag not set when sending an email from another folder than `INBOX`.
