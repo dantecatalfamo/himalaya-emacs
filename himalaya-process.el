@@ -1,13 +1,13 @@
-;;; himalaya-process.el --- Interface for the himalaya email client  -*- lexical-binding: t -*-
+;;; himalaya-process.el --- Process management of email client Himalaya CLI  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
 ;; Copyright (C) 2022-2023 soywod <clement.douin@posteo.net>
 
 ;; Author: Dante Catalfamo
 ;;      soywod <clement.douin@posteo.net>
-;; Maintainer: Dante Catalfamo
-;;      soywod <clement.douin@posteo.net>
-;; Version: 0.3
+;; Maintainer: soywod <clement.douin@posteo.net>
+;;      Dante Catalfamo
+;; Version: 1.0
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 ;; Keywords: mail comm
@@ -28,8 +28,8 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Interface for the himalaya email client
-;; https://github.com/soywod/himalaya
+;; Interface for the email client Himalaya CLI
+;; <https://github.com/soywod/himalaya>
 
 ;;; Code:
 
@@ -82,4 +82,4 @@ displays the output on non-zero exit."
       (json-parse-string output :object-type 'plist :array-type 'list))))
 
 (provide 'himalaya-process)
-;;; himalaya.el ends here
+;;; himalaya-process.el ends here

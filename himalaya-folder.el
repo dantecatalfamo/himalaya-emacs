@@ -1,13 +1,13 @@
-;;; himalaya-folder.el --- Himalaya folder-related code  -*- lexical-binding: t -*-
+;;; himalaya-folder.el --- Folder management for email client Himalaya CLI  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
 ;; Copyright (C) 2022-2023 soywod <clement.douin@posteo.net>
 
 ;; Author: Dante Catalfamo
 ;;      soywod <clement.douin@posteo.net>
-;; Maintainer: Dante Catalfamo
-;;      soywod <clement.douin@posteo.net>
-;; Version: 0.3
+;; Maintainer: soywod <clement.douin@posteo.net>
+;;      Dante Catalfamo
+;; Version: 1.0
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 ;; Keywords: mail comm
@@ -28,12 +28,13 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Interface for the himalaya email client
-;; https://github.com/soywod/himalaya
+;; Interface for the email client Himalaya CLI
+;; <https://github.com/soywod/himalaya>
 
 ;;; Code:
 
 (require 'himalaya-process)
+(require 'himalaya-account)
 
 (defcustom himalaya-default-folder nil
   "Default folder for himalaya, overrides the himalaya config."
@@ -68,16 +69,6 @@ the selected folder."
    (lambda (folders)
      (funcall callback (completing-read prompt folders)))))
 
-(defun himalaya-switch-folder-then-reload ()
-  "Ask user to pick a folder, set it as the current folder then
-reload envelopes."
-  (interactive)
-  (himalaya--pick-folder
-   "Folder: "
-   (lambda (folder)
-     (setq himalaya-folder folder)
-     (himalaya-list-envelopes))))
-
 (defun himalaya--expunge-folder (callback)
   "Expunge the current folder of the current account."
   (when himalaya-folder
@@ -90,14 +81,26 @@ reload envelopes."
      (when himalaya-account (list "--account" himalaya-account))
      himalaya-folder)))
 
-(defun himalaya-expunge-folder-then-reload ()
+(defun himalaya-switch-folder ()
+  "Ask user to pick a folder, set it as the current folder then
+reload envelopes."
+  (interactive)
+  (himalaya--pick-folder
+   "Folder: "
+   (lambda (folder)
+     (setq himalaya-folder folder)
+     (setq himalaya-page 1)
+     (himalaya--update-mode-line)
+     (revert-buffer))))
+
+(defun himalaya-expunge-folder ()
   "Expunge the current folder then reload envelopes."
   (interactive)
   (when ((and himalaya-folder (y-or-n-p (format "Expunge folder %s? " himalaya-folder))))
     (himalaya--expunge-folder
      (lambda (output)
        (message "%s" output)
-       (revert-buffer t t t)))))
+       (revert-buffer)))))
 
 (provide 'himalaya-folder)
 ;;; himalaya-folder.el ends here

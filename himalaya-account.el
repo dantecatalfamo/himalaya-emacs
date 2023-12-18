@@ -1,13 +1,13 @@
-;;; himalaya-account.el --- Interface for the himalaya email client  -*- lexical-binding: t -*-
+;;; himalaya-account.el --- Account management of email client Himalaya CLI  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
 ;; Copyright (C) 2022-2023 soywod <clement.douin@posteo.net>
 
 ;; Author: Dante Catalfamo
 ;;      soywod <clement.douin@posteo.net>
-;; Maintainer: Dante Catalfamo
-;;      soywod <clement.douin@posteo.net>
-;; Version: 0.3
+;; Maintainer: soywod <clement.douin@posteo.net>
+;;      Dante Catalfamo
+;; Version: 1.0
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 ;; Keywords: mail comm
@@ -28,8 +28,8 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Interface for the himalaya email client
-;; https://github.com/soywod/himalaya
+;; Interface for the email client Himalaya CLI
+;; <https://github.com/soywod/himalaya>
 
 ;;; Code:
 
@@ -61,16 +61,6 @@ the selected account."
    (lambda (accounts)
      (funcall callback (completing-read prompt accounts)))))
 
-(defun himalaya-switch-account-then-reload ()
-  "Ask user to pick an account, set it as current account then
-reload envelopes."
-  (interactive)
-  (himalaya--pick-account
-   "Account: "
-   (lambda (account)
-     (setq himalaya-account account)
-     (himalaya-list-envelopes))))
-
 (defun himalaya--sync-account (callback &optional folder)
   "Synchronize FOLDER of the current account.
 If FOLDER is nil, synchronize all the folders of the current
@@ -84,7 +74,20 @@ account."
    (when himalaya-account (list "--account" himalaya-account))
    (when folder (list "--include-folder" folder))))
 
-(defun himalaya-sync-account-then-reload (&optional sync-all)
+(defun himalaya-switch-account ()
+  "Ask user to pick an account, set it as current account then
+reload envelopes."
+  (interactive)
+  (himalaya--pick-account
+   "Account: "
+   (lambda (account)
+     (setq himalaya-account account)
+     (setq himalaya-folder nil)
+     (setq himalaya-page 1)
+     (himalaya--update-mode-line)
+     (revert-buffer))))
+
+(defun himalaya-sync-account (&optional sync-all)
   "Synchronize the current folder of the current account then reload
 the current buffer. If called with \\[universal-argument],
 SYNC-ALL the folders of the current account."
@@ -92,7 +95,7 @@ SYNC-ALL the folders of the current account."
   (himalaya--sync-account
    (lambda (output)
      (message "%s" output)
-     (himalaya-list-envelopes))
+     (revert-buffer))
    (unless sync-all himalaya-folder)))
 
 (provide 'himalaya-account)

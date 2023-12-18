@@ -1,4 +1,4 @@
-;;; himalaya.el --- Interface for the email client Himalaya CLI  -*- lexical-binding: t -*-
+;;; himalaya-attachment.el --- Attachment management of email client Himalaya CLI  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
 ;; Copyright (C) 2022-2023 soywod <clement.douin@posteo.net>
@@ -33,30 +33,28 @@
 
 ;;; Code:
 
-(require 'himalaya-envelope)
+(defun himalaya--download-attachments (ids callback)
+  "Download attachments from email with ID.
+If ACCOUNT or FOLDER are nil, use the defaults."
+  (message "Downloading attachments…")
+  (himalaya--run
+   callback
+   nil
+   "attachment"
+   "download"
+   (when himalaya-account (list "--account" himalaya-account))
+   (when himalaya-folder (list "--folder" himalaya-folder))
+   ids))
 
-(defgroup himalaya nil
-  "Options related to the Himalaya email client."
-  :group 'mail)
+(defun himalaya-download-marked-attachments ()
+  "Download attachment(s) associated to marked envelope(s), or to
+the envelope at point if mark is not set."
+  (interactive)
+  (himalaya--download-attachments
+   (or himalaya-marked-ids (list (tabulated-list-get-id)))
+   (lambda (status)
+     (message "%s" status)
+     (himalaya-unmark-all-envelopes t))))
 
-(defcustom himalaya-executable "himalaya"
-  "Name or location of the Himalaya executable."
-  :type 'text
-  :group 'himalaya)
-
-(defcustom himalaya-config-path nil
-  "Custom path to the Himalaya configuration file."
-  :type '(file :must-match t)
-  :group 'himalaya)
-
-(defun himalaya--update-mode-line ()
-  (let* ((account (or himalaya-account "-"))
-	 (folder (or himalaya-folder "-"))
-	 (mode-line (format " Account[%s] Folder[%s] Page[%s]" account folder himalaya-page)))
-    (setq mode-line-process mode-line)))
-
-;;;###autoload
-(defalias 'himalaya #'himalaya-list-envelopes)
-
-(provide 'himalaya)
-;;; himalaya.el ends here
+(provide 'himalaya-attachment)
+;;; himalaya-attachment.el ends here
