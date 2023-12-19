@@ -40,31 +40,31 @@
 (require 'himalaya-account)
 (require 'himalaya-folder)
 (require 'himalaya-envelope-mark)
+(require 'himalaya-attachment)
 (require 'himalaya-template)
 
-(defvar himalaya-reply nil
-  "True if the current email is a reply.")
-
-(defun himalaya--extract-headers (email)
-  "Extract email headers from EMAIL."
+(defun himalaya--extract-headers (msg)
+  "Extract MESSAGE headers."
   (with-temp-buffer
-    (insert email)
+    (insert msg)
     (goto-char (point-min))
     (mail-header-extract-no-properties)))
 
-(defun himalaya--prepare-email-write-buffer ()
-  "Setup BUFFER to be used to write an email.
-Sets the mail function correctly, adds mail header, etc."
+(defun himalaya--generate-write-buffer (buffer-name content)
+  "Setup to be used to write a message."
+  (switch-to-buffer (generate-new-buffer buffer-name))
+  (insert content)
   (goto-char (point-min))
   (search-forward "\n\n")
   (himalaya-message-write-mode)
   (set-buffer-modified-p nil))
 
 (defun himalaya--read-message (id callback &optional raw html)
-  "Return the contents of message matching the envelope ID from current folder on current account.
-If RAW is non-nil, return the raw contents of the message
-including headers. If HTML is non-nil, return the HTML version of
-the message, otherwise return the plain text version."
+  "Return the contents of message matching the envelope ID from
+current folder on current account. If RAW is non-nil, return the raw
+contents of the message including headers. If HTML is non-nil, return
+the HTML version of the message, otherwise return the plain text
+version."
   (message "Reading message %s…" id)
   (himalaya--run
    (lambda (msg) (funcall callback (replace-regexp-in-string "" "" msg)))
@@ -78,8 +78,8 @@ the message, otherwise return the plain text version."
    (format "%s" id))) ; force id as a string
 
 (defun himalaya--copy-messages (ids folder callback)
-  "Copy message(s) with envelope IDS from current folder of current
-account to target FOLDER."
+  "Copy message(s) matching envelope IDS from current folder of
+current account to target FOLDER."
   (message "Copying message(s) to %s…" folder)
   (himalaya--run
    callback
@@ -87,13 +87,13 @@ account to target FOLDER."
    "message"
    "copy"
    (when himalaya-account (list "--account" himalaya-account))
-   himalaya-folder
+   (when himalaya-folder (list "--folder" himalaya-folder))
    folder
    ids))
 
 (defun himalaya--move-messages (ids folder callback)
-  "Move message(s) with envelope IDS from SOURCE to TARGET folder on
-ACCOUNT. If ACCOUNT is nil, use the defaults."
+  "Move message(s) matching envelope IDS from current folder of
+current account to target FOLDER."
   (message "Moving message(s) to %s…" folder)
   (himalaya--run
    callback
@@ -101,13 +101,13 @@ ACCOUNT. If ACCOUNT is nil, use the defaults."
    "message"
    "move"
    (when himalaya-account (list "--account" himalaya-account))
-   himalaya-folder
+   (when himalaya-folder (list "--folder" himalaya-folder))
    folder
    ids))
 
 (defun himalaya--delete-messages (ids callback)
-  "Delete emails with IDS from FOLDER on ACCOUNT.
-IDS is a list of numbers."
+  "Delete message(s) matching envelope IDS from current folder of
+current account."
   (message "Deleting message(s)…")
   (himalaya--run
    callback
@@ -119,8 +119,8 @@ IDS is a list of numbers."
    ids))
 
 (defun himalaya--read-current-message (&optional pre-hook)
-  "Read message from envelope ID and FOLDER on ACCOUNT.
-If ACCOUNT or FOLDER are nil, use the defaults."
+  "Read message matching current envelope id in current folder from
+current account."
   (himalaya--read-message
    himalaya-id
    (lambda (msg)
@@ -137,8 +137,8 @@ If ACCOUNT or FOLDER are nil, use the defaults."
        (setq himalaya-subject subject)))))
 
 (defun himalaya--read-current-message-raw (&optional pre-hook)
-  "Display raw email ID from FOLDER on ACCOUNT.
-If ACCOUNT or FOLDER are nil, use the defaults."
+  "Read raw message matching current envelope id in current folder
+from current account."
   (himalaya--read-message
    himalaya-id
    (lambda (msg)
@@ -156,21 +156,16 @@ If ACCOUNT or FOLDER are nil, use the defaults."
    t))
 
 (defun himalaya-read-current-message-plain ()
-  "Read a plain version of the current message."
+  "Read message matching current envelope id in current folder from
+current account."
   (interactive)
   (himalaya--read-current-message #'kill-current-buffer))
 
 (defun himalaya-read-current-message-raw ()
-  "Read a raw version of the current message."
+  "Read raw message matching current envelope id in current folder
+from current account."
   (interactive)
   (himalaya--read-current-message-raw #'kill-current-buffer))
-
-(defun himalaya-download-current-attachments ()
-  "Download all attachments of the current message."
-  (interactive)
-  (himalaya--download-attachments
-   himalaya-id
-   (lambda (output) (message "%s" output))))
 
 (defun himalaya-reply-to-current-message (&optional reply-all)
   "Open a new buffer with a reply template to the current email.
@@ -179,11 +174,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (himalaya--reply-template
    himalaya-id
    (lambda (tpl)
-     (setq himalaya-reply t)
-     (switch-to-buffer (generate-new-buffer (format "*Reply: %s*" himalaya-subject)))
-     (insert tpl)
-     (set-buffer-modified-p nil)
-     (himalaya--prepare-email-write-buffer))
+     (himalaya--generate-write-buffer (format "*Reply: %s*" himalaya-subject) tpl))
    reply-all))
 
 (defun himalaya-forward-current-message ()
@@ -192,11 +183,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (himalaya--forward-template
    himalaya-id
    (lambda (tpl)
-     (setq himalaya-reply nil)
-     (switch-to-buffer (generate-new-buffer (format "*Forward: %s*" himalaya-subject)))
-     (insert tpl)
-     (set-buffer-modified-p nil)
-     (himalaya--prepare-email-write-buffer))))
+     (himalaya--generate-write-buffer (format "*Forward: %s*" himalaya-subject) tpl))))
 
 (defun himalaya-next-message ()
   "Go to the next email."
@@ -225,11 +212,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (interactive)
   (himalaya--write-template
    (lambda (tpl)
-     (setq himalaya-reply nil)
-     (switch-to-buffer (generate-new-buffer "*Himalaya New Message*"))
-     (insert tpl)
-     (set-buffer-modified-p nil)
-     (himalaya--prepare-email-write-buffer))))
+     (himalaya--generate-write-buffer "*Himalaya New Message*" tpl))))
 
 (defun himalaya-reply-to-message-at-point (&optional reply-all)
   "Pick the envelope at point then reply to its associated message.
@@ -251,8 +234,8 @@ If called with \\[universal-argument], message will be REPLY-ALL."
     (himalaya-read-message-forward)))
 
 (defun himalaya-copy-marked-messages ()
-  "Copy message(s) associated to marked envelope(s), or to the
-envelope at point if mark is not set."
+  "Copy message(s) matching marked envelope(s) (or envelope at point)
+from current folder of current account to selected folder."
   (interactive)
   (himalaya--pick-folder
    "Copy to folder: "
@@ -262,37 +245,42 @@ envelope at point if mark is not set."
       folder
       (lambda (status)
 	(message "%s" status)
-	(himalaya-unmark-all-envelopes t)
-	(revert-buffer))))))
+	(himalaya-unmark-all-envelopes t))))))
 
 (defun himalaya-move-marked-messages ()
-  "Move message(s) associated to marked envelope(s), or to the
-envelope at point if mark is not set."
+  "Move message(s) matching marked envelope(s) (or envelope at point)
+from current folder of current account to selected folder."
   (interactive)
   (himalaya--pick-folder
    "Move to folder: "
    (lambda (folder)
-     (himalaya--move-messages
-      (or himalaya-marked-ids (list (tabulated-list-get-id)))
-      folder
-      (lambda (status)
-	(message "%s" status)
-	(himalaya-unmark-all-envelopes t)
-	(revert-buffer))))))
+     (let ((prev-point (point))
+	   (ids (or himalaya-marked-ids (list (tabulated-list-get-id)))))
+       (himalaya--move-messages
+	ids
+	folder
+	(lambda (status)
+	  (message "%s" status)
+	  (himalaya-unmark-all-envelopes t)
+	  (revert-buffer)
+	  (goto-char prev-point)))))))
 
 (defun himalaya-delete-marked-messages ()
-  "Delete message(s) associated to marked envelope(s), or to the
-envelope at point if mark is not set."
+  "Delete message(s) matching marked envelope(s) (or envelope at
+point) from current folder of current account."
   (interactive)
-  (let* ((envelope (tabulated-list-get-entry))
-         (subject (substring-no-properties (elt envelope 2))))
-    (when (y-or-n-p (format "Delete message(s) %s? " (if himalaya-marked-ids (string-join himalaya-marked-ids ", ") subject)))
+  (let* ((prev-point (point))
+	 (envelope (tabulated-list-get-entry))
+         (subject (substring-no-properties (elt envelope 2)))
+	 (subject-or-ids (if himalaya-marked-ids (string-join himalaya-marked-ids ", ") subject)))
+    (when (y-or-n-p (format "Delete message(s) %s? " subject-or-ids))
       (himalaya--delete-messages
        (or himalaya-marked-ids (tabulated-list-get-id))
        (lambda (status)
 	 (message "%s" status)
 	 (himalaya-unmark-all-envelopes t)
-	 (revert-buffer))))))
+	 (revert-buffer)
+	 (goto-char prev-point))))))
 
 (defun himalaya-send-buffer ()
   "Send the current buffer."
@@ -330,7 +318,7 @@ envelope at point if mark is not set."
     map))
 
 (define-derived-mode himalaya-read-message-raw-mode message-mode "Himalaya-Read-Raw"
-  "Raw message reading mode.")
+  "Himalaya raw message reading mode.")
 
 (defvar himalaya-message-write-mode-map
   (let ((map (make-sparse-keymap)))
@@ -338,7 +326,7 @@ envelope at point if mark is not set."
     map))
 
 (define-derived-mode himalaya-message-write-mode message-mode "Himalaya-Write"
-  "Message writing mode.")
+  "Himalaya message writing mode.")
 
 (provide 'himalaya-message)
 ;;; himalaya-message.el ends here

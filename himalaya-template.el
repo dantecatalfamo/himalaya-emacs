@@ -38,7 +38,7 @@
 (require 'himalaya-folder)
 
 (defun himalaya--write-template (callback)
-  "Return a template for writing a new message using current account."
+  "Fetch a template for writing a new message using current account."
   (message "Generating new template…")
   (himalaya--run
    callback
@@ -48,9 +48,9 @@
    (when himalaya-account (list "--account" himalaya-account))))
 
 (defun himalaya--reply-template (id callback &optional reply-all)
-  "Return a reply template for email with ID from FOLDER on ACCOUNT.
-If ACCOUNT or FOLDER are nil, use the defaults.
-If REPLY-ALL is non-nil, the template will be generated as a reply all email."
+  "Fetch a forward template for message matching envelope ID from
+ current folder on current account. If REPLY-ALL is non-nil, the
+ template will include all recipients in To and Cc headers."
   (message "Generating reply template…")
   (himalaya--run
    callback
@@ -63,8 +63,8 @@ If REPLY-ALL is non-nil, the template will be generated as a reply all email."
    (format "%s" id)))
 
 (defun himalaya--forward-template (id callback)
-  "Return a forward template for email with ID from FOLDER on ACCOUNT.
-If ACCOUNT or FOLDER are nil, use the defaults."
+  "Fetch a forward template for message matching envelope ID from
+ current folder on current account."
   (message "Generating forward template…")
   (himalaya--run
    callback
@@ -76,7 +76,7 @@ If ACCOUNT or FOLDER are nil, use the defaults."
    (format "%s" id)))
 
 (defun himalaya--send-template (template callback)
-  "Send TEMPLATE using ACCOUNT."
+  "Send TEMPLATE."
   (message "Sending template…")
   (himalaya--run
    callback

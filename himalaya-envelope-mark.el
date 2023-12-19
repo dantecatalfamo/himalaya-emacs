@@ -76,7 +76,7 @@
 line."
   (interactive)
   (previous-line)
-  (goto-char (point-at-bol))
+  (goto-char (pos-bol))
   (let ((inhibit-read-only t))
     (setq himalaya-marked-ids (remove (tabulated-list-get-id) himalaya-marked-ids))
     (tabulated-list-put-tag "")
@@ -97,14 +97,13 @@ line."
   "Unmark all marked envelopes."
   (interactive)
   (when himalaya-marked-ids
-    (save-excursion
-      (let ((inhibit-read-only t))
-        (goto-char (point-min))
-        (while (re-search-forward (format "^[%s]" (string dired-marker-char)) nil t)
-          (himalaya--restore-face-property (point-at-bol) (point-at-eol)))
-        (tabulated-list-clear-all-tags)))
-    (unless quiet (message "%d marks removed" (length himalaya-marked-ids)))
-    (setq himalaya-marked-ids nil)))
+    (let ((inhibit-read-only t))
+      (goto-char (point-min))
+      (while (re-search-forward (format "^[%s]" (string dired-marker-char)) nil t)
+        (himalaya--restore-face-property (point-at-bol) (point-at-eol)))
+      (tabulated-list-clear-all-tags)))
+  (unless quiet (message "%d marks removed" (length himalaya-marked-ids)))
+  (setq himalaya-marked-ids nil))
 
 (provide 'himalaya-envelope-mark)
 ;;; himalaya-envelope-mark.el ends here

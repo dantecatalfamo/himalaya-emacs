@@ -36,7 +36,7 @@
 (require 'himalaya-process)
 
 (defvar himalaya-account nil
-  "The current account.")
+  "The current selected account.")
 
 (defun himalaya--list-accounts (callback)
   "Fetch all accounts defined in the configuration file."
@@ -75,8 +75,8 @@ account."
    (when folder (list "--include-folder" folder))))
 
 (defun himalaya-switch-account ()
-  "Ask user to pick an account, set it as current account then
-reload envelopes."
+  "Ask user to pick an account, set it as current account then list
+envelopes."
   (interactive)
   (himalaya--pick-account
    "Account: "
@@ -88,9 +88,9 @@ reload envelopes."
      (revert-buffer))))
 
 (defun himalaya-sync-account (&optional sync-all)
-  "Synchronize the current folder of the current account then reload
-the current buffer. If called with \\[universal-argument],
-SYNC-ALL the folders of the current account."
+  "Synchronize the current folder of the current account then list
+envelopes. If called with \\[universal-argument], SYNC-ALL the folders
+of the current account."
   (interactive "P")
   (himalaya--sync-account
    (lambda (output)

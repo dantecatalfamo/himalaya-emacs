@@ -34,8 +34,7 @@
 ;;; Code:
 
 (defun himalaya--download-attachments (ids callback)
-  "Download attachments from email with ID.
-If ACCOUNT or FOLDER are nil, use the defaults."
+  "Download attachment(s) of message(s) matching envelope IDS."
   (message "Downloading attachments…")
   (himalaya--run
    callback
@@ -47,14 +46,22 @@ If ACCOUNT or FOLDER are nil, use the defaults."
    ids))
 
 (defun himalaya-download-marked-attachments ()
-  "Download attachment(s) associated to marked envelope(s), or to
-the envelope at point if mark is not set."
+  "Download attachment(s) of message(s) matching marked envelope(s),
+or matching the envelope at point if mark is not set."
   (interactive)
   (himalaya--download-attachments
    (or himalaya-marked-ids (list (tabulated-list-get-id)))
    (lambda (status)
      (message "%s" status)
      (himalaya-unmark-all-envelopes t))))
+
+(defun himalaya-download-current-attachments ()
+  "Download attachment(s) of message matching the current envelope."
+  (interactive)
+  (himalaya--download-attachments
+   himalaya-id
+   (lambda (status)
+     (message "%s" status))))
 
 (provide 'himalaya-attachment)
 ;;; himalaya-attachment.el ends here

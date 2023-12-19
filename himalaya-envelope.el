@@ -42,12 +42,12 @@
 (require 'himalaya-attachment)
 
 (defcustom himalaya-order nil
-  "Order of how emails are displayed on each page of the folder."
+  "Order of how envelopes are displayed on each listing page."
   :type '(radio (const :tag "Ascending (oldest first)" t)
                 (const :tag "Descending (newest first)" nil))
   :group 'himalaya)
 
-(defcustom himalaya-page-size 10
+(defcustom himalaya-page-size 25
   "The number of envelopes to return per envelope list page."
   :type 'number
   :group 'himalaya)
@@ -92,8 +92,10 @@
   "The current envelope list page.")
 
 (defun himalaya--list-envelopes ()
-  "Fetch envelopes from the current account in the current folder.
-Paginate using the current page of global page size."
+  "Fetch envelopes from the current account in the current
+folder. Paginate using the current page of global page size. This
+function is blocking because it is used by 'tabulated-list-entries'
+which cannot work with callbacks."
   (himalaya--run-blocking
    "envelope"
    "list"
@@ -103,8 +105,9 @@ Paginate using the current page of global page size."
    (when himalaya-folder himalaya-folder)))
 
 (defun himalaya--build-envelopes-table ()
-  "Construct the envelopes table."
+  "Build the envelopes table."
   (when (consp current-prefix-arg)
+    (message "CONSP")
     (setq himalaya-page 1)
     (himalaya--update-mode-line)
     (goto-char (point-min)))
@@ -123,7 +126,7 @@ Paginate using the current page of global page size."
     (if himalaya-order entries (nreverse entries))))
 
 (defun himalaya--build-envelopes-table-sender-column (email)
-  "Construct the sender column of the envelopes table."
+  "Build the sender column of the envelopes table."
   (let* ((from (plist-get email :from))
          (name (plist-get from :name))
          (addr (plist-get from :addr)))
@@ -174,7 +177,7 @@ Paginate using the current page of global page size."
     map))
 
 (define-derived-mode himalaya-list-envelopes-mode tabulated-list-mode "Himalaya-Envelopes"
-  "Envelope listing mode."
+  "Himalaya envelope listing mode."
   (setq tabulated-list-format
 	(vector
          (list "ID" 5 nil :right-align t)

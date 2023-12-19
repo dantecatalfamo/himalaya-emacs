@@ -36,12 +36,6 @@
 (require 'himalaya-process)
 (require 'himalaya-account)
 
-(defcustom himalaya-default-folder nil
-  "Default folder for himalaya, overrides the himalaya config."
-  :type '(choice (const :tag "None" nil)
-                 (text  :tag "String"))
-  :group 'himalaya)
-
 (defvar himalaya-folder nil
   "The current folder.")
 
@@ -83,7 +77,7 @@ the selected folder."
 
 (defun himalaya-switch-folder ()
   "Ask user to pick a folder, set it as the current folder then
-reload envelopes."
+list envelopes."
   (interactive)
   (himalaya--pick-folder
    "Folder: "
@@ -94,7 +88,7 @@ reload envelopes."
      (revert-buffer))))
 
 (defun himalaya-expunge-folder ()
-  "Expunge the current folder then reload envelopes."
+  "Expunge the current folder then list envelopes."
   (interactive)
   (when ((and himalaya-folder (y-or-n-p (format "Expunge folder %s? " himalaya-folder))))
     (himalaya--expunge-folder
