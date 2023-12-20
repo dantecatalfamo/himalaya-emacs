@@ -85,6 +85,9 @@
 (defvar himalaya-id nil
   "The current envelope id.")
 
+(defvar himalaya-reply nil
+  "True if in reply mode.")
+
 (defvar himalaya-subject nil
   "The current envelope subject.")
 
@@ -107,7 +110,6 @@ which cannot work with callbacks."
 (defun himalaya--build-envelopes-table ()
   "Build the envelopes table."
   (when (consp current-prefix-arg)
-    (message "CONSP")
     (setq himalaya-page 1)
     (himalaya--update-mode-line)
     (goto-char (point-min)))

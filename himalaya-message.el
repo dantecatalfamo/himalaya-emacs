@@ -40,6 +40,7 @@
 (require 'himalaya-account)
 (require 'himalaya-folder)
 (require 'himalaya-envelope-mark)
+(require 'himalaya-flag)
 (require 'himalaya-attachment)
 (require 'himalaya-template)
 
@@ -174,6 +175,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (himalaya--reply-template
    himalaya-id
    (lambda (tpl)
+     (setq himalaya-reply t)
      (himalaya--generate-write-buffer (format "*Reply: %s*" himalaya-subject) tpl))
    reply-all))
 
@@ -183,6 +185,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (himalaya--forward-template
    himalaya-id
    (lambda (tpl)
+     (setq himalaya-reply nil)
      (himalaya--generate-write-buffer (format "*Forward: %s*" himalaya-subject) tpl))))
 
 (defun himalaya-next-message ()
@@ -212,6 +215,7 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (interactive)
   (himalaya--write-template
    (lambda (tpl)
+     (setq himalaya-reply nil)
      (himalaya--generate-write-buffer "*Himalaya New Message*" tpl))))
 
 (defun himalaya-reply-to-message-at-point (&optional reply-all)
@@ -288,9 +292,18 @@ point) from current folder of current account."
   (himalaya--send-template
    (buffer-string)
    (lambda (status)
-     (message "%s" status)
-     (set-buffer-modified-p nil)
-     (kill-current-buffer))))
+     (if himalaya-reply
+	 (himalaya--add-flag
+	  himalaya-id
+	  "Answered"
+	  (lambda (_)
+	    (message "%s" status)
+	    (set-buffer-modified-p nil)
+	    (kill-current-buffer)
+	    (himalaya-list-envelopes)))
+       (message "%s" status)
+       (set-buffer-modified-p nil)
+       (kill-current-buffer)))))
 
 (defvar himalaya-read-message-mode-map
   (let ((map (make-sparse-keymap)))

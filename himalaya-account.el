@@ -61,18 +61,18 @@ the selected account."
    (lambda (accounts)
      (funcall callback (completing-read prompt accounts)))))
 
-(defun himalaya--sync-account (callback &optional folder)
+(defun himalaya--sync-account (callback &optional sync-all)
   "Synchronize FOLDER of the current account.
 If FOLDER is nil, synchronize all the folders of the current
 account."
-  (message "Synchronizing account…")
+  (message "Synchronizing account%s…" (if sync-all " (all folders)" ""))
   (himalaya--run
    callback
    nil
    "account"
    "sync"
    (when himalaya-account (list "--account" himalaya-account))
-   (when folder (list "--include-folder" folder))))
+   (if sync-all "--all-folders" (when himalaya-folder (list "--include-folder" himalaya-folder)))))
 
 (defun himalaya-switch-account ()
   "Ask user to pick an account, set it as current account then list
@@ -96,7 +96,7 @@ of the current account."
    (lambda (output)
      (message "%s" output)
      (revert-buffer))
-   (unless sync-all himalaya-folder)))
+   sync-all))
 
 (provide 'himalaya-account)
 ;;; himalaya-account.el ends here
