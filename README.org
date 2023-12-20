@@ -1,15 +1,13 @@
 * Himalaya Emacs
   [[https://melpa.org/#/himalaya][file:https://melpa.org/packages/himalaya-badge.svg]]
 
-  Emacs front-end for the [[https://github.com/soywod/himalaya][himalaya]] email client.
-
-  This is currently a work in progress.
+  Emacs front-end for the email client [[https://github.com/soywod/himalaya][Himalaya CLI]].
 
 ** Installation
 
-   =himalaya-emacs= will be submitted to MELPA once it is stable.
+   =himalaya-emacs= is available on MELPA.
 
-   Until then, you can easily install it using =use-package=.
+   You can also install it using =use-package=.
 
    1. Clone the repository using git to your desired location.
       In this example I'll use
@@ -29,63 +27,65 @@
    Most settings can be customized through the Emacs Easy Customize
    system. =M-x customize-group himalaya=
 
-** List emails
+** List envelopes
 
-   =M-x himalaya= or =M-x himalaya-email-list=
+   =M-x himalaya= or =M-x himalaya-list-envelopes=
 
-   | Key     | Action                                                  |
-   |---------+---------------------------------------------------------|
-   | =n=     | Move cursor down                                        |
-   | =p=     | Move cursor up                                          |
-   | =m=     | Mark email at cursor                                    |
-   | =u=     | Unmark email at cursor                                  |
-   | =DEL=   | Unmark email at cursor (backward)                       |
-   | =U=     | Unmark all emails                                       |
-   | =f=     | Forward page                                            |
-   | =b=     | Backward page                                           |
-   | =j=     | Jump to page                                            |
-   | =C-c a= | Switch account                                    |
-   | =C-c f= | Switch folder                                           |
-   | =R=     | Reply to email at cursor                                |
-   | =F=     | Forward email at cursor                                 |
-   | =w=     | Write new email                                         |
-   | =a=     | Download marked emails (or email at cursor) attachments |
-   | =s=     | Synchronize current account                             |
-   | =C=     | Copy marked emails (or email at cursor)                 |
-   | =M=     | Move marked emails (or email at cursor)                 |
-   | =D=     | Delete marked emails (or email at cursor)               |
-   | =e=     | Expunge current folder                                  |
-   | =RET=   | Read email at cursor                                    |
+   | Key     | Action                                                      |
+   |---------+-------------------------------------------------------------|
+   | =n=     | Move cursor down                                            |
+   | =p=     | Move cursor up                                              |
+   | =m=     | Mark envelope at cursor                                     |
+   | =u=     | Unmark envelope at cursor                                   |
+   | =DEL=   | Unmark envelope at cursor (backward)                        |
+   | =U=     | Unmark all envelopes                                        |
+   | =f=     | Forward page                                                |
+   | =b=     | Backward page                                               |
+   | =j=     | Jump to page                                                |
+   | =C-c a= | Switch account                                              |
+   | =C-c f= | Switch folder                                               |
+   | =R=     | Reply to message at cursor                                  |
+   | =F=     | Forward message at cursor                                   |
+   | =w=     | Write new message                                           |
+   | =a=     | Download marked messages (or message at cursor) attachments |
+   | =s=     | Synchronize current account                                 |
+   | =C=     | Copy marked messages (or message at cursor)                 |
+   | =M=     | Move marked messages (or message at cursor)                 |
+   | =D=     | Delete marked messages (or message at cursor)               |
+   | =e=     | Expunge current folder                                      |
+   | =RET=   | Read message at cursor                                      |
 
-** Read email
+** Read message
 
-   After pressing enter on an email, you'll enter the email viewing
-   mode.
+   After pressing enter on an envelope, you'll enter the message
+   viewing mode.
 
-   | Key | Action               |
-   |-----+----------------------|
-   | =a= | Download attachments |
-   | =n= | Next email           |
-   | =p= | Previous email       |
-   | =r= | Reply to email       |
-   | =f= | Forward email        |
-   | =R= | View raw email       |
-   | =q= | Kill buffer          |
+   | Key | Action                   |
+   |-----+--------------------------|
+   | =a= | Download all attachments |
+   | =p= | Previous message         |
+   | =n= | Next message             |
+   | =r= | Reply to message         |
+   | =f= | Forward message          |
+   | =R= | View raw message         |
+   | =q= | Kill buffer              |
 
 ** Reply all
 
    Pressing the universal argument key (=C-u= by default) before
-   pressing the reply key will reply all to an email.
+   pressing the reply key will reply all to a message.
 
-** Write new email
+** Write new message
 
-   When writing a new email or a reply, press =C-c C-c= to send it or
-   =C-c C-k= to delete it.
+   When writing a new message or a reply, press =C-c C-c= to send it
+   or =C-c C-k= to delete it.
 
 ** Credits
 
-[[https://nlnet.nl/logo/banner-160x60.png]]
+   [[https://nlnet.nl/logo/banner-160x60.png]]
 
-Special thanks to the [[https://nlnet.nl/project/Himalaya/index.html][nlnet]] foundation that helped Himalaya to receive
-financial support from the [[https://www.ngi.eu/ngi-projects/ngi-assure/][NGI Assure]] program of the European
-Commission in September, 2022.
+   Special thanks to the [[https://nlnet.nl/project/Himalaya/index.html][NLnet foundation]] and the [[https://www.ngi.eu/][European Commission]]
+   that helped the project to receive financial support from:
+
+   - [[https://nlnet.nl/assure/][NGI Assure]] in 2022
+   - [[https://nlnet.nl/entrust/][NGI Zero Untrust]] in 2023

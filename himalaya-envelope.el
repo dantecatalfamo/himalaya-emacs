@@ -41,13 +41,13 @@
 (require 'himalaya-message)
 (require 'himalaya-attachment)
 
-(defcustom himalaya-order nil
+(defcustom himalaya-list-envelopes-order nil
   "Order of how envelopes are displayed on each listing page."
   :type '(radio (const :tag "Ascending (oldest first)" t)
                 (const :tag "Descending (newest first)" nil))
   :group 'himalaya)
 
-(defcustom himalaya-page-size 25
+(defcustom himalaya-list-envelopes-page-size 25
   "The number of envelopes to return per envelope list page."
   :type 'number
   :group 'himalaya)
@@ -101,7 +101,7 @@ which cannot work with callbacks."
    "list"
    (when himalaya-account (list "--account" himalaya-account))
    (when himalaya-page (list "--page" (format "%s" himalaya-page)))
-   (when himalaya-page-size (list "--page-size" (prin1-to-string himalaya-page-size)))
+   (when himalaya-list-envelopes-page-size (list "--page-size" (prin1-to-string himalaya-list-envelopes-page-size)))
    (when himalaya-folder himalaya-folder)))
 
 (defun himalaya--build-envelopes-table ()
@@ -123,7 +123,7 @@ which cannot work with callbacks."
          (himalaya--build-envelopes-table-sender-column email)
          (propertize (plist-get email :date) 'face himalaya-date-face)))
        entries))
-    (if himalaya-order entries (nreverse entries))))
+    (if himalaya-list-envelopes-order entries (nreverse entries))))
 
 (defun himalaya--build-envelopes-table-sender-column (email)
   "Build the sender column of the envelopes table."

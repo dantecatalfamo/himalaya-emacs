@@ -11,14 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `Deleted` char in flags column.
 - Added `expunge` command via keybind `e`.
+- Added `himalaya-config-path` option to override the default configuration file path.
 
 ### Changed
 
-- Renamed option `himalaya-email-order` to `himalaya-envelope-list-order`.
+- Adjusted API to match Himalaya CLI `v1.0.0`.
+- Renamed option `himalaya-email-order` to `himalaya-list-envelopes-order`.
+- Renamed option `himalaya-page-size` to `himalaya-list-envelopes-page-size`.
+- Reduced default envelopes listing page size from `50` to `25`.
+- Made all CLI calls async (except for envelopes listing due to table issue).
+- Moved code into domain-specific files (account, folder, envelope, message, flag, template, attachment).
+- Renamed functions containing `email` by either `envelope` or `message`, depending on the domain they belong to.
 
 ### Fixed
 
 - Fixed `Answered` flag not set when sending an email from another folder than `INBOX`.
+
+### Removed
+
+- Removed option `himalaya-default-account`.
+- Removed option `himalaya-default-folder`.
 
 ## [0.3] - 2023-02-09
 
@@ -44,7 +56,7 @@ The [0.2] has been reverted due to unintentional early merge, so the [0.3] is ju
 
 First release added to the [MELPA](https://github.com/melpa/melpa/pull/7952) repository.
 
-[unreleased]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.3...HEAD
+[Unreleased]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.3...HEAD
 [0.3]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.2...v0.3
 [0.2]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.1...v0.2
 [0.1]: https://github.com/dantecatalfamo/himalaya-emacs/compare/init...v0.1
