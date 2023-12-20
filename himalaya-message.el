@@ -332,7 +332,8 @@ point) from current folder of current account."
     map))
 
 (define-derived-mode himalaya-read-message-mode message-mode "Himalaya-Read"
-  "Message reading mode.")
+  "Message reading mode."
+  (setq mail-header-separator ""))
 
 (defvar himalaya-read-message-raw-mode-map
   (let ((map (make-sparse-keymap)))
@@ -346,7 +347,8 @@ point) from current folder of current account."
     map))
 
 (define-derived-mode himalaya-read-message-raw-mode message-mode "Himalaya-Read-Raw"
-  "Himalaya raw message reading mode.")
+  "Himalaya raw message reading mode."
+  (setq mail-header-separator ""))
 
 (defvar himalaya-message-write-mode-map
   (let ((map (make-sparse-keymap)))
@@ -354,7 +356,8 @@ point) from current folder of current account."
     map))
 
 (define-derived-mode himalaya-message-write-mode message-mode "Himalaya-Write"
-  "Himalaya message writing mode.")
+  "Himalaya message writing mode."
+  (setq mail-header-separator ""))
 
 (provide 'himalaya-message)
 ;;; himalaya-message.el ends here
