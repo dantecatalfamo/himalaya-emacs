@@ -166,6 +166,8 @@ which cannot work with callbacks."
     (define-key map (kbd "DEL"  ) #'himalaya-unmark-envelope-backward)
     (define-key map (kbd "u"    ) #'himalaya-unmark-envelope-forward)
     (define-key map (kbd "U"    ) #'himalaya-unmark-all-envelopes)
+    (define-key map (kbd "C-c +") #'himalaya-add-flag-marked-envelopes)
+    (define-key map (kbd "C-c -") #'himalaya-remove-flag-marked-envelopes)
     (define-key map (kbd "RET"  ) #'himalaya-read-message-at-point)
     (define-key map (kbd "w"    ) #'himalaya-write-new-message)
     (define-key map (kbd "R"    ) #'himalaya-reply-to-message-at-point)

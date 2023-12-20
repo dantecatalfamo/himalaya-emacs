@@ -10,8 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `Deleted` char in flags column.
-- Added `expunge` command via keybind `e`.
 - Added `himalaya-config-path` option to override the default configuration file path.
+- Added `e` envelope listing keybind to expunge the current folder.
+- Added `C-c +` envelope listing keybind to add a flag to marked envelopes (or envelope at point) [#22]. 
+- Added `C-c -` envelope listing keybind to add a flag to marked envelopes (or envelope at point) [#22].
 
 ### Changed
 
@@ -63,3 +65,4 @@ First release added to the [MELPA](https://github.com/melpa/melpa/pull/7952) rep
 
 [#15]: https://github.com/dantecatalfamo/himalaya-emacs/pull/15
 [#17]: https://github.com/dantecatalfamo/himalaya-emacs/pull/17
+[#22]: https://github.com/dantecatalfamo/himalaya-emacs/issues/22

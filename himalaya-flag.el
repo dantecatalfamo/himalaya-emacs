@@ -33,6 +33,10 @@
 
 ;;; Code:
 
+(require 'himalaya-process)
+(require 'himalaya-account)
+(require 'himalaya-folder)
+
 (defcustom himalaya-unseen-face font-lock-string-face
   "Font face for unseen envelope symbol."
   :type 'face
@@ -72,6 +76,34 @@ marked for deletion."
   :type 'text
   :group 'himalaya)
 
+(defun himalaya--add-flag (ids flag callback)
+  "Add FLAG to envelopes IDS from the current folder of the current
+account."
+  (message "Adding flag %s…" flag)
+  (himalaya--run
+   callback
+   nil
+   "flag"
+   "add"
+   (when himalaya-account (list "--account" himalaya-account))
+   (when himalaya-folder (list "--folder" himalaya-folder))
+   ids
+   flag))
+
+(defun himalaya--remove-flag (ids flag callback)
+  "Remove FLAG to envelopes IDS from the current folder of the current
+account."
+  (message "Adding flag %s…" flag)
+  (himalaya--run
+   callback
+   nil
+   "flag"
+   "remove"
+   (when himalaya-account (list "--account" himalaya-account))
+   (when himalaya-folder (list "--folder" himalaya-folder))
+   ids
+   flag))
+
 (defun himalaya--flag-symbols (flags)
   "Generate a display string for FLAGS."
   (concat
@@ -79,6 +111,38 @@ marked for deletion."
    (if (member "Answered" flags) himalaya-answered-symbol " ")
    (if (member "Flagged" flags) (propertize himalaya-flagged-symbol 'face himalaya-flagged-face) " ")
    (if (member "Deleted" flags) (propertize himalaya-deleted-symbol 'face himalaya-deleted-face) " ")))
+
+(defun himalaya-add-flag-marked-envelopes ()
+  "Ask user to pick a flag then add it to marked envelopes, or to
+ envelope at point if mark not set."
+  (interactive)
+  (let ((prev-point (point))
+	(ids (or himalaya-marked-ids (list (tabulated-list-get-id))))
+	(flag (completing-read "Add flag: " (list "Seen" "Answered" "Flagged" "Deleted" "Drafts"))))
+    (himalaya--add-flag
+     ids
+     flag
+     (lambda (status)
+       (message "%s" status)
+       (himalaya-unmark-all-envelopes t)
+       (revert-buffer)
+       (goto-char prev-point)))))
+
+(defun himalaya-remove-flag-marked-envelopes ()
+  "Ask user to pick a flag then remove it from marked envelopes, or
+ from envelope at point if mark not set."
+  (interactive)
+  (let ((prev-point (point))
+	(ids (or himalaya-marked-ids (list (tabulated-list-get-id))))
+	(flag (completing-read "Remove flag: " (list "Seen" "Answered" "Flagged" "Deleted" "Drafts"))))
+    (himalaya--remove-flag
+     ids
+     flag
+     (lambda (status)
+       (message "%s" status)
+       (himalaya-unmark-all-envelopes t)
+       (revert-buffer)
+       (goto-char prev-point)))))
 
 (provide 'himalaya-flag)
 ;;; himalaya-flag.el ends here

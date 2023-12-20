@@ -44,6 +44,8 @@
    | =j=     | Jump to page                                                |
    | =C-c a= | Switch account                                              |
    | =C-c f= | Switch folder                                               |
+   | =C-c += | Add flag to marked envelopes (or envelope at point)         |
+   | =C-c -= | Remove flag from marked envelopes (or envelope at point)    |
    | =R=     | Reply to message at cursor                                  |
    | =F=     | Forward message at cursor                                   |
    | =w=     | Write new message                                           |
