@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `e` envelope listing keybind to expunge the current folder.
 - Added `C-c +` envelope listing keybind to add a flag to marked envelopes (or envelope at point) [#22]. 
 - Added `C-c -` envelope listing keybind to add a flag to marked envelopes (or envelope at point) [#22].
+- Added preview support for `RET` envelope listing keybind using the universal argument, which allow you to preview a message without applying the "Seen" flag.
 
 ### Changed
 

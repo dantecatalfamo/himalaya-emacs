@@ -60,7 +60,7 @@
   (himalaya-message-write-mode)
   (set-buffer-modified-p nil))
 
-(defun himalaya--read-message (id callback &optional raw html)
+(defun himalaya--read-message (id preview callback &optional raw html)
   "Return the contents of message matching the envelope ID from
 current folder on current account. If RAW is non-nil, return the raw
 contents of the message including headers. If HTML is non-nil, return
@@ -74,6 +74,7 @@ version."
    "read"
    (when himalaya-account (list "--account" himalaya-account))
    (when himalaya-folder (list "--folder" himalaya-folder))
+   (when preview "--preview")
    (when raw "--raw")
    (when html "--html")
    (format "%s" id))) ; force id as a string
@@ -119,11 +120,12 @@ current account."
    (when himalaya-folder (list "--folder" himalaya-folder))
    ids))
 
-(defun himalaya--read-current-message (&optional pre-hook)
+(defun himalaya--read-current-message (&optional preview pre-hook)
   "Read message matching current envelope id in current folder from
 current account."
   (himalaya--read-message
    himalaya-id
+   preview
    (lambda (msg)
      (when pre-hook (funcall pre-hook))
      (let* ((headers (himalaya--extract-headers msg))
@@ -137,11 +139,12 @@ current account."
        (setq buffer-read-only t)
        (setq himalaya-subject subject)))))
 
-(defun himalaya--read-current-message-raw (&optional pre-hook)
+(defun himalaya--read-current-message-raw (&optional preview pre-hook)
   "Read raw message matching current envelope id in current folder
 from current account."
   (himalaya--read-message
    himalaya-id
+   preview
    (lambda (msg)
      (when pre-hook (funcall pre-hook))
      (let* ((headers (himalaya--extract-headers msg))
@@ -156,17 +159,21 @@ from current account."
 	 (setq himalaya-subject subject))))
    t))
 
-(defun himalaya-read-current-message-plain ()
+(defun himalaya-read-current-message-plain (&optional preview)
   "Read message matching current envelope id in current folder from
-current account."
-  (interactive)
-  (himalaya--read-current-message #'kill-current-buffer))
+current account. If called with \\[universal-argument], enable
+PREVIEW, which means that the flag Seen will not be applied to its
+envelope."
+  (interactive "P")
+  (himalaya--read-current-message preview #'kill-current-buffer))
 
-(defun himalaya-read-current-message-raw ()
+(defun himalaya-read-current-message-raw (&optional preview)
   "Read raw message matching current envelope id in current folder
-from current account."
-  (interactive)
-  (himalaya--read-current-message-raw #'kill-current-buffer))
+from current account. If called with \\[universal-argument], enable
+PREVIEW, which means that the flag Seen will not be applied to its
+envelope."
+  (interactive "P")
+  (himalaya--read-current-message-raw preview #'kill-current-buffer))
 
 (defun himalaya-reply-to-current-message (&optional reply-all)
   "Open a new buffer with a reply template to the current email.
@@ -204,11 +211,13 @@ If called with \\[universal-argument], email will be REPLY-ALL."
   (setq himalaya-id (prin1-to-string (max 1 (1- (string-to-number himalaya-id)))))
   (himalaya--read-current-message))
 
-(defun himalaya-read-message-at-point ()
-  "Pick the envelope at point and read its associated message."
-  (interactive)
+(defun himalaya-read-message-at-point (&optional preview)
+  "Pick the envelope at point and read its associated message. If
+called with \\[universal-argument], enable PREVIEW, which means that
+the flag Seen will not be applied to its envelope."
+  (interactive "P")
   (setq himalaya-id (tabulated-list-get-id))
-  (himalaya--read-current-message))
+  (himalaya--read-current-message preview))
 
 (defun himalaya-write-new-message ()
   "Compose a new message in a buffer."
@@ -305,13 +314,19 @@ point) from current folder of current account."
        (set-buffer-modified-p nil)
        (kill-current-buffer)))))
 
+(defun himalaya-kill-current-buffer-then-list-envelopes ()
+  "Kill the current buffer then list envelopes."
+  (interactive)
+  (kill-current-buffer)
+  (himalaya-list-envelopes))
+
 (defvar himalaya-read-message-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "a") #'himalaya-download-current-attachments)
     (define-key map (kbd "R") #'himalaya-read-current-message-raw)
     (define-key map (kbd "r") #'himalaya-reply-to-current-message)
     (define-key map (kbd "f") #'himalaya-forward-current-message)
-    (define-key map (kbd "q") #'kill-current-buffer)
+    (define-key map (kbd "q") #'himalaya-kill-current-buffer-then-list-envelopes)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-prev-message)
     map))
@@ -325,7 +340,7 @@ point) from current folder of current account."
     (define-key map (kbd "R") #'himalaya-read-current-message-plain)
     (define-key map (kbd "r") #'himalaya-reply-to-current-message)
     (define-key map (kbd "f") #'himalaya-forward-current-message)
-    (define-key map (kbd "q") #'kill-current-buffer)
+    (define-key map (kbd "q") #'himalaya-kill-current-buffer-then-list-envelopes)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-prev-message)
     map))
