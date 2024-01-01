@@ -1,4 +1,4 @@
-;;; himalaya.el --- Interface for the email client Himalaya CLI  -*- lexical-binding: t -*-
+;;; himalaya-attachment.el --- Attachment management of email client Himalaya CLI  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
 ;; Copyright (C) 2022-2023 soywod <clement.douin@posteo.net>
@@ -33,32 +33,35 @@
 
 ;;; Code:
 
-(require 'himalaya-envelope)
+(defun himalaya--download-attachments (ids callback)
+  "Download attachment(s) of message(s) matching envelope IDS."
+  (message "Downloading attachments…")
+  (himalaya--run
+   callback
+   nil
+   "attachment"
+   "download"
+   (when himalaya-account (list "--account" himalaya-account))
+   (when himalaya-folder (list "--folder" himalaya-folder))
+   ids))
 
-(defgroup himalaya nil
-  "Options related to the email client Himalaya CLI."
-  :group 'mail)
+(defun himalaya-download-marked-attachments ()
+  "Download attachment(s) of message(s) matching marked envelope(s),
+or matching the envelope at point if mark is not set."
+  (interactive)
+  (himalaya--download-attachments
+   (or himalaya-marked-ids (list (tabulated-list-get-id)))
+   (lambda (status)
+     (message "%s" status)
+     (himalaya-unmark-all-envelopes t))))
 
-(defcustom himalaya-executable "himalaya"
-  "Name or location of the email client Himalaya CLI executable."
-  :type 'text
-  :group 'himalaya)
+(defun himalaya-download-current-attachments ()
+  "Download attachment(s) of message matching the current envelope."
+  (interactive)
+  (himalaya--download-attachments
+   himalaya-id
+   (lambda (status)
+     (message "%s" status))))
 
-(defcustom himalaya-config-path nil
-  "Path to the email client Himalaya CLI configuration file."
-  :type '(file :must-match t)
-  :group 'himalaya)
-
-(defun himalaya--update-mode-line ()
-  "Update the mode line with the current account, folder and
-envelope listing page."
-  (let* ((account (or himalaya-account "-"))
-	 (folder (or himalaya-folder "-"))
-	 (mode-line (format " Account[%s] Folder[%s] Page[%s]" account folder himalaya-page)))
-    (setq mode-line-process mode-line)))
-
-;;;###autoload
-(defalias 'himalaya #'himalaya-list-envelopes)
-
-(provide 'himalaya)
-;;; himalaya.el ends here
+(provide 'himalaya-attachment)
+;;; himalaya-attachment.el ends here
