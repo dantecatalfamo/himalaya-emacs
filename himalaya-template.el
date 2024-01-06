@@ -77,7 +77,7 @@
 
 (defun himalaya--send-template (template callback)
   "Send TEMPLATE."
-  (message "Sending template…")
+  (message "Sending message…")
   (himalaya--run
    callback
    template
