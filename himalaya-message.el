@@ -314,12 +314,6 @@ point) from current folder of current account."
        (set-buffer-modified-p nil)
        (kill-current-buffer)))))
 
-(defun himalaya-kill-current-buffer-then-list-envelopes ()
-  "Kill the current buffer then list envelopes."
-  (interactive)
-  (kill-current-buffer)
-  (himalaya-list-envelopes))
-
 (defvar himalaya-read-message-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "a") #'himalaya-download-current-attachments)
@@ -341,7 +335,7 @@ point) from current folder of current account."
     (define-key map (kbd "R") #'himalaya-read-current-message-plain)
     (define-key map (kbd "r") #'himalaya-reply-to-current-message)
     (define-key map (kbd "f") #'himalaya-forward-current-message)
-    (define-key map (kbd "q") #'himalaya-kill-current-buffer-then-list-envelopes)
+    (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-prev-message)
     map))
