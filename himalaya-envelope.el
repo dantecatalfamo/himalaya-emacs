@@ -94,6 +94,9 @@
 (defvar himalaya-page 1
   "The current envelope list page.")
 
+(defvar himalaya-list-envelopes-query nil
+  "The current list envelopes filter and sort query.")
+
 (defun himalaya--list-envelopes ()
   "Fetch envelopes from the current account in the current
 folder. Paginate using the current page of global page size. This
@@ -102,10 +105,11 @@ which cannot work with callbacks."
   (himalaya--run-blocking
    "envelope"
    "list"
+   (when himalaya-folder (list "--folder" himalaya-folder))
    (when himalaya-account (list "--account" himalaya-account))
    (when himalaya-page (list "--page" (format "%s" himalaya-page)))
    (when himalaya-list-envelopes-page-size (list "--page-size" (prin1-to-string himalaya-list-envelopes-page-size)))
-   (when himalaya-folder himalaya-folder)))
+   (when himalaya-list-envelopes-query himalaya-list-envelopes-query)))
 
 (defun himalaya--build-envelopes-table ()
   "Build the envelopes table."
@@ -155,29 +159,38 @@ which cannot work with callbacks."
   (himalaya--update-mode-line)
   (revert-buffer))
 
+(defun himalaya-filter-and-sort-envelopes (query)
+  "Filter and sort envelopes of the current folder matching the
+given QUERY."
+  (interactive "MQuery: ")
+  (setq himalaya-list-envelopes-query (if (string-empty-p query) nil query))
+  (himalaya--update-mode-line)
+  (revert-buffer))
+
 (defvar himalaya-list-envelopes-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c a") #'himalaya-switch-account)
-    (define-key map (kbd "s"    ) #'himalaya-sync-account)
-    (define-key map (kbd "C-c f") #'himalaya-switch-folder)
-    (define-key map (kbd "e"    ) #'himalaya-expunge-folder)
-    (define-key map (kbd "f"    ) #'himalaya-list-envelopes-next-page)
-    (define-key map (kbd "b"    ) #'himalaya-list-envelopes-prev-page)
-    (define-key map (kbd "j"    ) #'himalaya-list-envelopes-at-page)
-    (define-key map (kbd "m"    ) #'himalaya-mark-envelope-forward)
-    (define-key map (kbd "DEL"  ) #'himalaya-unmark-envelope-backward)
-    (define-key map (kbd "u"    ) #'himalaya-unmark-envelope-forward)
-    (define-key map (kbd "U"    ) #'himalaya-unmark-all-envelopes)
-    (define-key map (kbd "C-c +") #'himalaya-add-flag-marked-envelopes)
-    (define-key map (kbd "C-c -") #'himalaya-remove-flag-marked-envelopes)
-    (define-key map (kbd "RET"  ) #'himalaya-read-message-at-point)
-    (define-key map (kbd "w"    ) #'himalaya-write-new-message)
-    (define-key map (kbd "R"    ) #'himalaya-reply-to-message-at-point)
-    (define-key map (kbd "F"    ) #'himalaya-forward-message-at-point)
-    (define-key map (kbd "C"    ) #'himalaya-copy-marked-messages)
-    (define-key map (kbd "M"    ) #'himalaya-move-marked-messages)
-    (define-key map (kbd "D"    ) #'himalaya-delete-marked-messages)
-    (define-key map (kbd "a"    ) #'himalaya-download-marked-attachments)
+    (define-key map (kbd "C-c a"  ) #'himalaya-switch-account)
+    (define-key map (kbd "s"      ) #'himalaya-sync-account)
+    (define-key map (kbd "C-c f"  ) #'himalaya-switch-folder)
+    (define-key map (kbd "e"      ) #'himalaya-expunge-folder)
+    (define-key map (kbd "f"      ) #'himalaya-list-envelopes-next-page)
+    (define-key map (kbd "b"      ) #'himalaya-list-envelopes-prev-page)
+    (define-key map (kbd "j"      ) #'himalaya-list-envelopes-at-page)
+    (define-key map (kbd "C-c C-s") #'himalaya-filter-and-sort-envelopes)
+    (define-key map (kbd "m"      ) #'himalaya-mark-envelope-forward)
+    (define-key map (kbd "DEL"    ) #'himalaya-unmark-envelope-backward)
+    (define-key map (kbd "u"      ) #'himalaya-unmark-envelope-forward)
+    (define-key map (kbd "U"      ) #'himalaya-unmark-all-envelopes)
+    (define-key map (kbd "C-c +"  ) #'himalaya-add-flag-marked-envelopes)
+    (define-key map (kbd "C-c -"  ) #'himalaya-remove-flag-marked-envelopes)
+    (define-key map (kbd "RET"    ) #'himalaya-read-message-at-point)
+    (define-key map (kbd "w"      ) #'himalaya-write-new-message)
+    (define-key map (kbd "R"      ) #'himalaya-reply-to-message-at-point)
+    (define-key map (kbd "F"      ) #'himalaya-forward-message-at-point)
+    (define-key map (kbd "C"      ) #'himalaya-copy-marked-messages)
+    (define-key map (kbd "M"      ) #'himalaya-move-marked-messages)
+    (define-key map (kbd "D"      ) #'himalaya-delete-marked-messages)
+    (define-key map (kbd "a"      ) #'himalaya-download-marked-attachments)
     map))
 
 (define-derived-mode himalaya-list-envelopes-mode tabulated-list-mode "Himalaya-Envelopes"
