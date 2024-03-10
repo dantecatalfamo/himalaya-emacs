@@ -1,7 +1,7 @@
 ;;; himalaya-flag.el --- Flag management of email client Himalaya CLI  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
-;; Copyright (C) 2022-2023 soywod <clement.douin@posteo.net>
+;; Copyright (C) 2022-2024 soywod <clement.douin@posteo.net>
 
 ;; Author: Dante Catalfamo
 ;;      soywod <clement.douin@posteo.net>
