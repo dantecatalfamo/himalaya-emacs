@@ -51,12 +51,12 @@
     (goto-char (point-min))
     (mail-header-extract-no-properties)))
 
-(defun himalaya--generate-write-buffer (buffer-name content)
+(defun himalaya--generate-write-buffer (buffer-name tpl)
   "Setup to be used to write a message."
   (switch-to-buffer (generate-new-buffer buffer-name))
-  (insert content)
-  (goto-char (point-min))
-  (search-forward "\n\n")
+  (insert (plist-get tpl :content))
+  (goto-line (plist-get (plist-get tpl :cursor) :row))
+  (move-to-column (plist-get (plist-get tpl :cursor) :col))
   (himalaya-message-write-mode)
   (set-buffer-modified-p nil))
 
@@ -320,7 +320,7 @@ point) from current folder of current account."
     (define-key map (kbd "R") #'himalaya-read-current-message-raw)
     (define-key map (kbd "r") #'himalaya-reply-to-current-message)
     (define-key map (kbd "f") #'himalaya-forward-current-message)
-    (define-key map (kbd "q") #'himalaya-kill-current-buffer-then-list-envelopes)
+    (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-prev-message)
     map))
