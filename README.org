@@ -31,32 +31,35 @@
 
    =M-x himalaya= or =M-x himalaya-list-envelopes=
 
-   | Key     | Action                                                      |
-   |---------+-------------------------------------------------------------|
-   | =n=     | Move cursor down                                            |
-   | =p=     | Move cursor up                                              |
-   | =m=     | Mark envelope at cursor                                     |
-   | =u=     | Unmark envelope at cursor                                   |
-   | =DEL=   | Unmark envelope at cursor (backward)                        |
-   | =U=     | Unmark all envelopes                                        |
-   | =f=     | Forward page                                                |
-   | =b=     | Backward page                                               |
-   | =j=     | Jump to page                                                |
-   | =C-c a= | Switch account                                              |
-   | =C-c f= | Switch folder                                               |
-   | =C-c += | Add flag to marked envelopes (or envelope at point)         |
-   | =C-c -= | Remove flag from marked envelopes (or envelope at point)    |
-   | =R=     | Reply to message at cursor                                  |
-   | =F=     | Forward message at cursor                                   |
-   | =w=     | Write new message                                           |
-   | =a=     | Download marked messages (or message at cursor) attachments |
-   | =s=     | Synchronize current account                                 |
-   | =C=     | Copy marked messages (or message at cursor)                 |
-   | =M=     | Move marked messages (or message at cursor)                 |
-   | =D=     | Delete marked messages (or message at cursor)               |
-   | =e=     | Expunge current folder                                      |
-   | =RET=   | Read message at cursor                                      |
+   | Key       | Action                                                      |
+   |-----------+-------------------------------------------------------------|
+   | =n=       | Move cursor down                                            |
+   | =p=       | Move cursor up                                              |
+   | =m=       | Mark envelope at cursor                                     |
+   | =u=       | Unmark envelope at cursor                                   |
+   | =DEL=     | Unmark envelope at cursor (backward)                        |
+   | =U=       | Unmark all envelopes                                        |
+   | =f=       | Forward page                                                |
+   | =b=       | Backward page                                               |
+   | =j=       | Jump to page                                                |
+   | =C-c C-s= | Filter and sort query according to the given query          |
+   | =C-c a=   | Switch account                                              |
+   | =C-c f=   | Switch folder                                               |
+   | =C-c +=   | Add flag to marked envelopes (or envelope at point)         |
+   | =C-c -=   | Remove flag from marked envelopes (or envelope at point)    |
+   | =R=       | Reply to message at cursor                                  |
+   | =F=       | Forward message at cursor                                   |
+   | =w=       | Write new message                                           |
+   | =a=       | Download marked messages (or message at cursor) attachments |
+   | =s=       | Synchronize current account                                 |
+   | =C=       | Copy marked messages (or message at cursor)                 |
+   | =M=       | Move marked messages (or message at cursor)                 |
+   | =D=       | Delete marked messages (or message at cursor)               |
+   | =e=       | Expunge current folder                                      |
+   | =RET=     | Read message at cursor                                      |
 
+   See the [[https://pimalaya.org/himalaya/cli/latest/usage/advanced/envelope/list.html#query][documentation]] for more detailed information about the query API.
+   
 ** Read message
 
    After pressing enter on an envelope, you'll enter the message
@@ -90,4 +93,4 @@
    that helped the project to receive financial support from:
 
    - [[https://nlnet.nl/assure/][NGI Assure]] in 2022
-   - [[https://nlnet.nl/entrust/][NGI Zero Untrust]] in 2023
+   - [[https://nlnet.nl/entrust/][NGI Zero Entrust]] in 2023
