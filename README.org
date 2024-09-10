@@ -58,8 +58,6 @@
    | =e=       | Expunge current folder                                      |
    | =RET=     | Read message at cursor                                      |
 
-   See the [[https://pimalaya.org/himalaya/cli/latest/usage/advanced/envelope/list.html#query][documentation]] for more detailed information about the query API.
-   
 ** Read message
 
    After pressing enter on an envelope, you'll enter the message
