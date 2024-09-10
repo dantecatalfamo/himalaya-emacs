@@ -1,7 +1,7 @@
 * Himalaya Emacs
   [[https://melpa.org/#/himalaya][file:https://melpa.org/packages/himalaya-badge.svg]]
 
-  Emacs front-end for the email client [[https://github.com/soywod/himalaya][Himalaya CLI]].
+  Emacs front-end for the email client [[https://github.com/pimalaya/himalaya][Himalaya CLI]].
 
 ** Installation
 
