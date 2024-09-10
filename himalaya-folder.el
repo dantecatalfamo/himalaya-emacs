@@ -35,6 +35,7 @@
 
 (require 'himalaya-process)
 (require 'himalaya-account)
+(require 'himalaya-modeline)
 
 (defvar himalaya-folder nil
   "The current folder.")

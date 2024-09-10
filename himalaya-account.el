@@ -34,6 +34,7 @@
 ;;; Code:
 
 (require 'himalaya-process)
+(require 'himalaya-modeline)
 
 (defvar himalaya-account nil
   "The current selected account.")
