@@ -52,7 +52,7 @@ or matching the envelope at point if mark is not set."
   (himalaya--download-attachments
    (or himalaya-marked-ids (list (tabulated-list-get-id)))
    (lambda (status)
-     (message "%s" status)
+     (message "%s" (string-trim status))
      (himalaya-unmark-all-envelopes t))))
 
 (defun himalaya-download-current-attachments ()
@@ -61,7 +61,7 @@ or matching the envelope at point if mark is not set."
   (himalaya--download-attachments
    himalaya-id
    (lambda (status)
-     (message "%s" status))))
+     (message "%s" (string-trim status)))))
 
 (provide 'himalaya-attachment)
 ;;; himalaya-attachment.el ends here

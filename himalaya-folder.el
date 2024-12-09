@@ -93,7 +93,7 @@ list envelopes."
   (when ((and himalaya-folder (y-or-n-p (format "Expunge folder %s? " himalaya-folder))))
     (himalaya--expunge-folder
      (lambda (output)
-       (message "%s" output)
+       (message "%s" (string-trim output))
        (revert-buffer)))))
 
 (provide 'himalaya-folder)

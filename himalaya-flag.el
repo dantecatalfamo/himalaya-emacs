@@ -123,7 +123,7 @@ account."
      ids
      flag
      (lambda (status)
-       (message "%s" status)
+       (message "%s" (string-trim status))
        (himalaya-unmark-all-envelopes t)
        (revert-buffer)
        (goto-char prev-point)))))
@@ -139,7 +139,7 @@ account."
      ids
      flag
      (lambda (status)
-       (message "%s" status)
+       (message "%s" (string-trim status))
        (himalaya-unmark-all-envelopes t)
        (revert-buffer)
        (goto-char prev-point)))))

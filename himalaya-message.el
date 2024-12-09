@@ -264,7 +264,7 @@ from current folder of current account to selected folder."
       (or himalaya-marked-ids (list (tabulated-list-get-id)))
       folder
       (lambda (status)
-	(message "%s" status)
+	(message "%s" (string-trim status))
 	(himalaya-unmark-all-envelopes t))))))
 
 (defun himalaya-move-marked-messages ()
@@ -280,7 +280,7 @@ from current folder of current account to selected folder."
 	ids
 	folder
 	(lambda (status)
-	  (message "%s" status)
+	  (message "%s" (string-trim status))
 	  (himalaya-unmark-all-envelopes t)
 	  (revert-buffer)
 	  (goto-char prev-point)))))))
@@ -297,7 +297,7 @@ point) from current folder of current account."
       (himalaya--delete-messages
        (or himalaya-marked-ids (tabulated-list-get-id))
        (lambda (status)
-	 (message "%s" status)
+	 (message "%s" (string-trim status))
 	 (himalaya-unmark-all-envelopes t)
 	 (revert-buffer)
 	 (goto-char prev-point))))))
@@ -313,11 +313,11 @@ point) from current folder of current account."
 	  himalaya-id
 	  "Answered"
 	  (lambda (_)
-	    (message "%s" status)
+	    (message "%s" (string-trim status))
 	    (set-buffer-modified-p nil)
 	    (kill-current-buffer)
 	    (himalaya-list-envelopes)))
-       (message "%s" status)
+       (message "%s" (string-trim status))
        (set-buffer-modified-p nil)
        (kill-current-buffer)))))
 
