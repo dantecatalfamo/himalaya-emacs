@@ -170,7 +170,6 @@ given QUERY."
 (defvar himalaya-list-envelopes-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c a"  ) #'himalaya-switch-account)
-    (define-key map (kbd "s"      ) #'himalaya-sync-account)
     (define-key map (kbd "C-c f"  ) #'himalaya-switch-folder)
     (define-key map (kbd "e"      ) #'himalaya-expunge-folder)
     (define-key map (kbd "f"      ) #'himalaya-list-envelopes-next-page)

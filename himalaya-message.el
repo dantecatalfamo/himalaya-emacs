@@ -60,12 +60,10 @@
   (himalaya-message-write-mode)
   (set-buffer-modified-p nil))
 
-(defun himalaya--read-message (id preview callback &optional raw html)
+(defun himalaya--read-message (id preview callback)
   "Return the contents of message matching the envelope ID from
 current folder on current account. If RAW is non-nil, return the raw
-contents of the message including headers. If HTML is non-nil, return
-the HTML version of the message, otherwise return the plain text
-version."
+contents of the message including headers."
   (message "Reading message %s…" id)
   (himalaya--run
    (lambda (msg) (funcall callback (replace-regexp-in-string "" "" msg)))
@@ -75,8 +73,21 @@ version."
    (when himalaya-account (list "--account" himalaya-account))
    (when himalaya-folder (list "--folder" himalaya-folder))
    (when preview "--preview")
-   (when raw "--raw")
-   (when html "--html")
+   (format "%s" id))) ; force id as a string
+
+(defun himalaya--read-message-raw (id callback)
+  "Return the contents of message matching the envelope ID from
+current folder on current account. If RAW is non-nil, return the raw
+contents of the message including headers."
+  (message "Reading raw message %s…" id)
+  (himalaya--run-plain
+   (lambda (msg) (funcall callback (replace-regexp-in-string "" "" msg)))
+   nil
+   "message"
+   "export"
+   (when himalaya-account (list "--account" himalaya-account))
+   (when himalaya-folder (list "--folder" himalaya-folder))
+   "--full"
    (format "%s" id))) ; force id as a string
 
 (defun himalaya--copy-messages (ids folder callback)
@@ -139,12 +150,11 @@ current account."
        (setq buffer-read-only t)
        (setq himalaya-subject subject)))))
 
-(defun himalaya--read-current-message-raw (&optional preview pre-hook)
+(defun himalaya--read-current-message-raw (&optional pre-hook)
   "Read raw message matching current envelope id in current folder
 from current account."
-  (himalaya--read-message
+  (himalaya--read-message-raw
    himalaya-id
-   preview
    (lambda (msg)
      (when pre-hook (funcall pre-hook))
      (let* ((headers (himalaya--extract-headers msg))
@@ -156,8 +166,7 @@ from current account."
 	 (set-buffer-modified-p nil)
 	 (himalaya-read-message-raw-mode)
 	 (goto-char (point-min))
-	 (setq himalaya-subject subject))))
-   t))
+	 (setq himalaya-subject subject))))))
 
 (defun himalaya-read-current-message-plain (&optional preview)
   "Read message matching current envelope id in current folder from
@@ -167,13 +176,11 @@ envelope."
   (interactive "P")
   (himalaya--read-current-message preview #'kill-current-buffer))
 
-(defun himalaya-read-current-message-raw (&optional preview)
+(defun himalaya-read-current-message-raw ()
   "Read raw message matching current envelope id in current folder
-from current account. If called with \\[universal-argument], enable
-PREVIEW, which means that the flag Seen will not be applied to its
-envelope."
-  (interactive "P")
-  (himalaya--read-current-message-raw preview #'kill-current-buffer))
+from current account."
+  (interactive)
+  (himalaya--read-current-message-raw #'kill-current-buffer))
 
 (defun himalaya-reply-to-current-message (&optional reply-all)
   "Open a new buffer with a reply template to the current email.

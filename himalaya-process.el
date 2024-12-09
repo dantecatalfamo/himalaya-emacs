@@ -67,6 +67,34 @@ nil. Signals a Lisp error and displays the output on non-zero exit."
       (error "Himalaya exited with a non-zero status"))
     (funcall callback (with-current-buffer (process-buffer process) (json-parse-string (buffer-string) :object-type 'plist :array-type 'list)))))
 
+(defun himalaya--run-plain (callback input &rest args)
+  "Asynchronously run Himalaya CLI with ARGS. CALLBACK is called with
+stdout string when Himalaya CLI exits. INPUT is sent to stdin if not
+nil. Signals a Lisp error and displays the output on non-zero exit."
+  (himalaya--clear-io-buffers)
+  (let* ((args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "-o" "plain" args))
+	 (command (cons himalaya-executable (flatten-list args)))
+	 (sentinel (lambda (process event) (himalaya--run-plain-sentinel process callback)))
+	 (process (make-process
+		   :name "himalaya"
+		   :buffer (get-buffer-create "*Himalaya stdout*")
+		   :stderr (get-buffer-create "*Himalaya stderr*")
+		   :connection-type 'pipe
+		   :command command
+		   :sentinel sentinel)))
+    (when input
+      (process-send-string process input)
+      (process-send-eof process))))
+
+(defun himalaya--run-plain-sentinel (process callback)
+  "Sentinel function for himalaya--run-plain make-process."
+  (when (eq (process-status process) 'exit)
+    (message nil)
+    (unless (eq 0 (process-exit-status process))
+      (display-buffer "*Himalaya stderr*")
+      (error "Himalaya exited with a non-zero status"))
+    (funcall callback (with-current-buffer (process-buffer process) (buffer-string)))))
+
 (defun himalaya--run-blocking (&rest args)
   "Blocking version of 'himalaya--run'."
   (himalaya--clear-io-buffers)

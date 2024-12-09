@@ -51,7 +51,6 @@
    | =F=       | Forward message at cursor                                   |
    | =w=       | Write new message                                           |
    | =a=       | Download marked messages (or message at cursor) attachments |
-   | =s=       | Synchronize current account                                 |
    | =C=       | Copy marked messages (or message at cursor)                 |
    | =M=       | Move marked messages (or message at cursor)                 |
    | =D=       | Delete marked messages (or message at cursor)               |
@@ -88,7 +87,9 @@
    [[https://nlnet.nl/logo/banner-160x60.png]]
 
    Special thanks to the [[https://nlnet.nl/project/Himalaya/index.html][NLnet foundation]] and the [[https://www.ngi.eu/][European Commission]]
-   that helped the project to receive financial support from:
+   that helped the project to receive financial support from various
+   programs:
 
-   - [[https://nlnet.nl/assure/][NGI Assure]] in 2022
-   - [[https://nlnet.nl/entrust/][NGI Zero Entrust]] in 2023
+   - [[https://nlnet.nl/project/Himalaya/][NGI Assure]] in 2022
+   - [[https://nlnet.nl/project/Pimalaya/][NGI Zero Entrust]] in 2023
+   - [[https://nlnet.nl/project/Pimalaya-PIM/][NGI Zero Core]] in 2024 (still ongoing)
