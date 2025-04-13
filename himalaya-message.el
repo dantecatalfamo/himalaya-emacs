@@ -44,6 +44,13 @@
 (require 'himalaya-attachment)
 (require 'himalaya-template)
 
+(defcustom himalaya-html-browse-function #'eww-open-file
+  "Function to use for browsing HTML emails.
+This should be a function that takes a file path as an argument.
+Examples: 'eww-open-file', 'xwidget-webkit-browse-url', 'browse-url-of-file'."
+  :type 'function
+  :group 'himalaya)
+
 (defun himalaya--extract-headers (msg)
   "Extract MESSAGE headers."
   (with-temp-buffer
@@ -95,11 +102,18 @@ contents of the message including headers."
 current folder on current account and view it in a web browser."
   (message "Reading HTML message %s…" id)
   (let ((temp-dir (make-temp-file "himalaya-html-" t)))
+    (message "Exporting to directory: %s" temp-dir)
     (himalaya--run-plain
-     (lambda (_)
+     (lambda (output)
        (let ((html-file (expand-file-name "index.html" temp-dir)))
-         (when (file-exists-p html-file)
-           (funcall callback html-file))))
+         (if (file-exists-p html-file)
+             (let ((file-size (nth 7 (file-attributes html-file))))
+               (if (> file-size 0)
+                   (funcall callback html-file)
+                 (message "HTML file exists but is empty. Output: %s" output)
+                 (error "HTML export failed: file is empty")))
+           (message "HTML file not created. Output: %s" output)
+           (error "HTML export failed: file not created"))))
      nil
      "message"
      "export"
@@ -194,7 +208,7 @@ from current account using Emacs' built-in web browser (EWW)."
    himalaya-id
    (lambda (html-file)
      (when pre-hook (funcall pre-hook))
-     (eww-open-file html-file))))
+     (funcall himalaya-html-browse-function html-file))))
 
 (defun himalaya-read-current-message-plain (&optional preview)
   "Read message matching current envelope id in current folder from
