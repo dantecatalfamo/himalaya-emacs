@@ -90,6 +90,25 @@ contents of the message including headers."
    "--full"
    (format "%s" id))) ; force id as a string
 
+(defun himalaya--read-message-html (id callback)
+  "Export the HTML version of message matching the envelope ID from
+current folder on current account and view it in a web browser."
+  (message "Reading HTML message %s…" id)
+  (let ((temp-dir (make-temp-file "himalaya-html-" t)))
+    (himalaya--run-plain
+     (lambda (_)
+       (let ((html-file (expand-file-name "index.html" temp-dir)))
+         (when (file-exists-p html-file)
+           (funcall callback html-file))))
+     nil
+     "message"
+     "export"
+     (when himalaya-account (list "--account" himalaya-account))
+     (when himalaya-folder (list "--folder" himalaya-folder))
+     "--destination"
+     temp-dir
+     (format "%s" id)))) ; force id as a string
+
 (defun himalaya--copy-messages (ids folder callback)
   "Copy message(s) matching envelope IDS from current folder of
 current account to target FOLDER."
@@ -168,6 +187,15 @@ from current account."
 	 (goto-char (point-min))
 	 (setq himalaya-subject subject))))))
 
+(defun himalaya--read-current-message-html (&optional pre-hook)
+  "Read HTML message matching current envelope id in current folder
+from current account using Emacs' built-in web browser (EWW)."
+  (himalaya--read-message-html
+   himalaya-id
+   (lambda (html-file)
+     (when pre-hook (funcall pre-hook))
+     (eww-open-file html-file))))
+
 (defun himalaya-read-current-message-plain (&optional preview)
   "Read message matching current envelope id in current folder from
 current account. If called with \\[universal-argument], enable
@@ -181,6 +209,12 @@ envelope."
 from current account."
   (interactive)
   (himalaya--read-current-message-raw #'kill-current-buffer))
+
+(defun himalaya-read-current-message-html ()
+  "Read HTML message matching current envelope id in current folder
+from current account using Emacs' built-in web browser (EWW)."
+  (interactive)
+  (himalaya--read-current-message-html #'kill-current-buffer))
 
 (defun himalaya-reply-to-current-message (&optional reply-all)
   "Open a new buffer with a reply template to the current email.
@@ -330,6 +364,7 @@ point) from current folder of current account."
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-prev-message)
+    (define-key map (kbd "h") #'himalaya-read-current-message-html)
     map))
 
 (define-derived-mode himalaya-read-message-mode message-mode "Himalaya-Read"
@@ -345,6 +380,7 @@ point) from current folder of current account."
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-prev-message)
+    (define-key map (kbd "h") #'himalaya-read-current-message-html)
     map))
 
 (define-derived-mode himalaya-read-message-raw-mode message-mode "Himalaya-Read-Raw"
