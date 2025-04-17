@@ -44,6 +44,13 @@
 (require 'himalaya-attachment)
 (require 'himalaya-template)
 
+(defcustom himalaya-html-browse-function #'eww-open-file
+  "Function to use for browsing HTML emails.
+This should be a function that takes a file path as an argument.
+Examples: 'eww-open-file', 'xwidget-webkit-browse-url', 'browse-url-of-file'."
+  :type 'function
+  :group 'himalaya)
+
 (defun himalaya--extract-headers (msg)
   "Extract MESSAGE headers."
   (with-temp-buffer
@@ -89,6 +96,32 @@ contents of the message including headers."
    (when himalaya-folder (list "--folder" himalaya-folder))
    "--full"
    (format "%s" id))) ; force id as a string
+
+(defun himalaya--read-message-html (id callback)
+  "Export the HTML version of message matching the envelope ID from
+current folder on current account and view it in a web browser."
+  (message "Reading HTML message %s…" id)
+  (let ((temp-dir (make-temp-file "himalaya-html-" t)))
+    (message "Exporting to directory: %s" temp-dir)
+    (himalaya--run-plain
+     (lambda (output)
+       (let ((html-file (expand-file-name "index.html" temp-dir)))
+         (if (file-exists-p html-file)
+             (let ((file-size (nth 7 (file-attributes html-file))))
+               (if (> file-size 0)
+                   (funcall callback html-file)
+                 (message "HTML file exists but is empty. Output: %s" output)
+                 (error "HTML export failed: file is empty")))
+           (message "HTML file not created. Output: %s" output)
+           (error "HTML export failed: file not created"))))
+     nil
+     "message"
+     "export"
+     (when himalaya-account (list "--account" himalaya-account))
+     (when himalaya-folder (list "--folder" himalaya-folder))
+     "--destination"
+     temp-dir
+     (format "%s" id)))) ; force id as a string
 
 (defun himalaya--copy-messages (ids folder callback)
   "Copy message(s) matching envelope IDS from current folder of
@@ -168,6 +201,15 @@ from current account."
 	 (goto-char (point-min))
 	 (setq himalaya-subject subject))))))
 
+(defun himalaya--read-current-message-html (&optional pre-hook)
+  "Read HTML message matching current envelope id in current folder
+from current account using Emacs' built-in web browser (EWW)."
+  (himalaya--read-message-html
+   himalaya-id
+   (lambda (html-file)
+     (when pre-hook (funcall pre-hook))
+     (funcall himalaya-html-browse-function html-file))))
+
 (defun himalaya-read-current-message-plain (&optional preview)
   "Read message matching current envelope id in current folder from
 current account. If called with \\[universal-argument], enable
@@ -181,6 +223,12 @@ envelope."
 from current account."
   (interactive)
   (himalaya--read-current-message-raw #'kill-current-buffer))
+
+(defun himalaya-read-current-message-html ()
+  "Read HTML message matching current envelope id in current folder
+from current account using Emacs' built-in web browser (EWW)."
+  (interactive)
+  (himalaya--read-current-message-html #'kill-current-buffer))
 
 (defun himalaya-reply-to-current-message (&optional reply-all)
   "Open a new buffer with a reply template to the current email.
@@ -330,6 +378,7 @@ point) from current folder of current account."
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-prev-message)
+    (define-key map (kbd "h") #'himalaya-read-current-message-html)
     map))
 
 (define-derived-mode himalaya-read-message-mode message-mode "Himalaya-Read"
@@ -345,6 +394,7 @@ point) from current folder of current account."
     (define-key map (kbd "q") #'kill-current-buffer)
     (define-key map (kbd "n") #'himalaya-next-message)
     (define-key map (kbd "p") #'himalaya-prev-message)
+    (define-key map (kbd "h") #'himalaya-read-current-message-html)
     map))
 
 (define-derived-mode himalaya-read-message-raw-mode message-mode "Himalaya-Read-Raw"
