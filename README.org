@@ -93,3 +93,7 @@
    - [[https://nlnet.nl/project/Himalaya/][NGI Assure]] in 2022
    - [[https://nlnet.nl/project/Pimalaya/][NGI Zero Entrust]] in 2023
    - [[https://nlnet.nl/project/Pimalaya-PIM/][NGI Zero Core]] in 2024 (still ongoing)
+
+** Extras
+
+   A menu is available at https://github.com/jesse-c/himalaya-menu-emacs.
