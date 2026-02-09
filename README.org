@@ -82,18 +82,17 @@
    When writing a new message or a reply, press =C-c C-c= to send it
    or =C-c C-k= to delete it.
 
+** Extensions
+
+   A menu is available at https://github.com/jesse-c/himalaya-menu-emacs.
+
 ** Credits
 
    [[https://nlnet.nl/logo/banner-160x60.png]]
 
    Special thanks to the [[https://nlnet.nl/project/Himalaya/index.html][NLnet foundation]] and the [[https://www.ngi.eu/][European Commission]]
-   that helped the project to receive financial support from various
-   programs:
+   that have been financially supporting the project for years:
 
-   - [[https://nlnet.nl/project/Himalaya/][NGI Assure]] in 2022
-   - [[https://nlnet.nl/project/Pimalaya/][NGI Zero Entrust]] in 2023
-   - [[https://nlnet.nl/project/Pimalaya-PIM/][NGI Zero Core]] in 2024 (still ongoing)
-
-** Extras
-
-   A menu is available at https://github.com/jesse-c/himalaya-menu-emacs.
+   - 2022: [[https://nlnet.nl/project/Himalaya/][NGI Assure]]
+   - 2023: [[https://nlnet.nl/project/Pimalaya/][NGI Zero Entrust]]
+   - 2024: [[https://nlnet.nl/project/Pimalaya-PIM/][NGI Zero Core]] (still ongoing in 2026)
