@@ -76,6 +76,17 @@ marked for deletion."
   :type 'text
   :group 'himalaya)
 
+(defcustom himalaya-attachment-face font-lock-warning-face
+  "Font face for deleted envelope symbol."
+  :type 'face
+  :group 'himalaya)
+
+(defcustom himalaya-attachment-symbol "@"
+  "Symbol to display in the flags column when a message has at least one
+attachment."
+  :type 'text
+  :group 'himalaya)
+
 (defun himalaya--add-flag (ids flag callback)
   "Add FLAG to envelopes IDS from the current folder of the current
 account."
@@ -104,13 +115,14 @@ account."
    ids
    flag))
 
-(defun himalaya--flag-symbols (flags)
+(defun himalaya--flag-symbols (flags has-attachment)
   "Generate a display string for FLAGS."
   (concat
    (if (member "Seen" flags) " " (propertize himalaya-unseen-symbol 'face himalaya-unseen-face))
    (if (member "Answered" flags) himalaya-answered-symbol " ")
    (if (member "Flagged" flags) (propertize himalaya-flagged-symbol 'face himalaya-flagged-face) " ")
-   (if (member "Deleted" flags) (propertize himalaya-deleted-symbol 'face himalaya-deleted-face) " ")))
+   (if (member "Deleted" flags) (propertize himalaya-deleted-symbol 'face himalaya-deleted-face) " ")
+   (if (eq has-attachment t) (propertize himalaya-attachment-symbol 'face himalaya-attachment-face) " ")))
 
 (defun himalaya-add-flag-marked-envelopes ()
   "Ask user to pick a flag then add it to marked envelopes, or to

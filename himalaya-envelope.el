@@ -124,7 +124,7 @@ which cannot work with callbacks."
 	(plist-get email :id)
         (vector
          (propertize (plist-get email :id) 'face himalaya-id-face)
-         (himalaya--flag-symbols (plist-get email :flags))
+         (himalaya--flag-symbols (plist-get email :flags) (plist-get email :has_attachment))
          (plist-get email :subject)
          (himalaya--build-envelopes-table-sender-column email)
          (propertize (plist-get email :date) 'face himalaya-date-face)))
@@ -197,7 +197,7 @@ given QUERY."
   (setq tabulated-list-format
 	(vector
          (list "ID" 5 nil :right-align t)
-         (list "Flags" 6 nil)
+         (list "Flags" 7 nil)
          (list "Subject" himalaya-subject-width nil)
          (list "From" himalaya-from-width nil)
          (list "Date" 19 nil)))
