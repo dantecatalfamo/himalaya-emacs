@@ -1,7 +1,7 @@
 ;;; himalaya-process.el --- Process management of email client Himalaya CLI  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
-;; Copyright (C) 2022-2024 soywod <clement.douin@posteo.net>
+;; Copyright (C) 2022-2026 soywod <clement.douin@posteo.net>
 
 ;; Author: Dante Catalfamo
 ;;      soywod <clement.douin@posteo.net>
@@ -99,7 +99,8 @@ nil. Signals a Lisp error and displays the output on non-zero exit."
   "Blocking version of 'himalaya--run'."
   (himalaya--clear-io-buffers)
   (with-temp-buffer
-    (let* ((args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "-o" "json" args))
+    (let* ((process-environment (cons "RUST_LOG=off" process-environment))
+           (args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "-o" "json" args))
            (exit-status (apply #'call-process himalaya-executable nil t nil (flatten-list args)))
 	   (output (buffer-string)))
       (unless (eq 0 exit-status)
