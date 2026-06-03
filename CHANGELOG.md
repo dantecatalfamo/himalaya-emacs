@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0] - 2026-06-03
+
+### Added
+
+- Added support for himalaya CLI 2.0.
+- Added `M-x himalaya-search-envelopes` (filter + sort using the v2 search DSL), bound to `C-c C-s` in the envelope listing.
+- Added `himalaya-from` defcustom to pre-fill the `From:` header in compose buffers.
+- Added MML composition in the write buffer: `<#part ...>` directives are compiled to MIME via `mml-to-mime` before the message is piped to `himalaya message send`.
+
+### Changed
+
+- Targeted himalaya CLI 2.0 wire contract: global flag is `--json` (replaces `-o json`); subcommands use `mailbox` (replaces `folder`) and the `--mailbox` / `-m` flag (replaces `--folder`); flag CLI is `flag add -m <NAME> -f <FLAG> <ids>` (split flag and ids); message `copy` / `move` use `--from` / `--to`.
+- Renamed `Folder` to `Mailbox` everywhere: `himalaya-folder` defvar, `himalaya-switch-folder`, mode-line label, internal helpers and prompts.
+- Renamed `himalaya-folder.el` to `himalaya-mailbox.el`.
+- Rewrote envelope JSON parsing for the v2 shape: top-level object wrappers (`{"envelopes":[...]}`, `{"mailboxes":[...]}`, `{"accounts":[...]}`), `Address.email` (replaces `Address.addr`), `Flag` objects (`{raw, iana}`) replacing bare flag strings, and the kebab-cased `has-attachment` field.
+- Rewrote message reading: fetch raw RFC 5322 bytes via `himalaya message read --raw`, then decode headers and the text/plain body in Elisp (via Gnus `mm-decode`) for the plain view.
+- Rewrote compose, reply and forward to build the buffer directly in Emacs using `message-mode` instead of fetching a template from the CLI. Sending now compiles the buffer through `mml-to-mime` and pipes the result to `himalaya message send` over stdin.
+
+### Removed
+
+- Removed the `e` (expunge mailbox) keybind: v2 dropped shared `folder expunge`.
+- Removed the `D` (delete messages) keybind: v2 dropped shared `message delete`.
+- Removed the `h` (HTML view) keybind: v2 dropped `message export --destination`.
+- Removed the `--preview` argument on read: on the IMAP backend, v2 always uses `BODY.PEEK` so reading never auto-sets `\Seen`.
+- Removed `himalaya-template.el` and the `himalaya template …` integration: v2 dropped the `template` subcommand family.
+
 ## [1.0] - 2023-02-09
 
 ### Added
@@ -61,7 +87,9 @@ The [0.2] has been reverted due to unintentional early merge, so the [0.3] is ju
 
 First release added to the [MELPA](https://github.com/melpa/melpa/pull/7952) repository.
 
-[Unreleased]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.3...HEAD
+[Unreleased]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v2.0...HEAD
+[2.0]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v1.0...v2.0
+[1.0]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.3...v1.0
 [0.3]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.2...v0.3
 [0.2]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.1...v0.2
 [0.1]: https://github.com/dantecatalfamo/himalaya-emacs/compare/init...v0.1

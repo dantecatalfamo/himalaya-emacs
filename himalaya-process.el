@@ -7,7 +7,7 @@
 ;;      soywod <clement.douin@posteo.net>
 ;; Maintainer: soywod <clement.douin@posteo.net>
 ;;      Dante Catalfamo
-;; Version: 1.0
+;; Version: 2.0
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 ;; Keywords: mail comm
@@ -29,7 +29,7 @@
 
 ;;; Commentary:
 ;; Interface for the email client Himalaya CLI
-;; <https://github.com/soywod/himalaya>
+;; <https://github.com/pimalaya/himalaya>
 
 ;;; Code:
 
@@ -40,13 +40,14 @@
     (let ((inhibit-read-only t)) (erase-buffer))))
 
 (defun himalaya--run (callback input &rest args)
-  "Asynchronously run Himalaya CLI with ARGS. CALLBACK is called with
-stdout string when Himalaya CLI exits. INPUT is sent to stdin if not
-nil. Signals a Lisp error and displays the output on non-zero exit."
+  "Asynchronously run Himalaya CLI with ARGS and --json. CALLBACK is
+called with the parsed JSON object when Himalaya CLI exits. INPUT
+is sent to stdin if not nil. Signals a Lisp error and displays the
+output on non-zero exit."
   (himalaya--clear-io-buffers)
-  (let* ((args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "-o" "json" args))
+  (let* ((args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "--json" args))
 	 (command (cons himalaya-executable (flatten-list args)))
-	 (sentinel (lambda (process event) (himalaya--run-sentinel process callback)))
+	 (sentinel (lambda (process _event) (himalaya--run-sentinel process callback)))
 	 (process (make-process
 		   :name "himalaya"
 		   :buffer (get-buffer-create "*Himalaya stdout*")
@@ -59,7 +60,7 @@ nil. Signals a Lisp error and displays the output on non-zero exit."
       (process-send-eof process))))
 
 (defun himalaya--run-sentinel (process callback)
-  "Sentinel function for himalaya--async-run make-process."
+  "Sentinel function for `himalaya--run'."
   (when (eq (process-status process) 'exit)
     (message nil)
     (unless (eq 0 (process-exit-status process))
@@ -67,14 +68,16 @@ nil. Signals a Lisp error and displays the output on non-zero exit."
       (error "Himalaya exited with a non-zero status"))
     (funcall callback (with-current-buffer (process-buffer process) (json-parse-string (buffer-string) :object-type 'plist :array-type 'list)))))
 
-(defun himalaya--run-plain (callback input &rest args)
-  "Asynchronously run Himalaya CLI with ARGS. CALLBACK is called with
-stdout string when Himalaya CLI exits. INPUT is sent to stdin if not
-nil. Signals a Lisp error and displays the output on non-zero exit."
+(defun himalaya--run-raw (callback input &rest args)
+  "Asynchronously run Himalaya CLI with ARGS and capture stdout
+verbatim. CALLBACK is called with the raw stdout string when the
+process exits. INPUT is sent to stdin if not nil. Used for
+commands like `message read --raw' that emit RFC 5322 bytes
+rather than JSON."
   (himalaya--clear-io-buffers)
-  (let* ((args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "-o" "plain" args))
+  (let* ((args (list (when himalaya-config-path (list "-c" himalaya-config-path)) args))
 	 (command (cons himalaya-executable (flatten-list args)))
-	 (sentinel (lambda (process event) (himalaya--run-plain-sentinel process callback)))
+	 (sentinel (lambda (process _event) (himalaya--run-raw-sentinel process callback)))
 	 (process (make-process
 		   :name "himalaya"
 		   :buffer (get-buffer-create "*Himalaya stdout*")
@@ -86,8 +89,8 @@ nil. Signals a Lisp error and displays the output on non-zero exit."
       (process-send-string process input)
       (process-send-eof process))))
 
-(defun himalaya--run-plain-sentinel (process callback)
-  "Sentinel function for himalaya--run-plain make-process."
+(defun himalaya--run-raw-sentinel (process callback)
+  "Sentinel function for `himalaya--run-raw'."
   (when (eq (process-status process) 'exit)
     (message nil)
     (unless (eq 0 (process-exit-status process))
@@ -96,11 +99,11 @@ nil. Signals a Lisp error and displays the output on non-zero exit."
     (funcall callback (with-current-buffer (process-buffer process) (buffer-string)))))
 
 (defun himalaya--run-blocking (&rest args)
-  "Blocking version of 'himalaya--run'."
+  "Blocking version of `himalaya--run'."
   (himalaya--clear-io-buffers)
   (with-temp-buffer
     (let* ((process-environment (cons "RUST_LOG=off" process-environment))
-           (args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "-o" "json" args))
+           (args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "--json" args))
            (exit-status (apply #'call-process himalaya-executable nil t nil (flatten-list args)))
 	   (output (buffer-string)))
       (unless (eq 0 exit-status)
