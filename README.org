@@ -3,6 +3,9 @@
 
   Emacs front-end for the email client [[https://github.com/pimalaya/himalaya][Himalaya CLI]].
 
+  This release targets [[https://github.com/pimalaya/himalaya][Himalaya CLI]] *2.0 or later*. For older
+  Himalaya releases, use the =1.0= tag of this package.
+
 ** Installation
 
    =himalaya-emacs= is available on MELPA.
@@ -42,9 +45,9 @@
    | =f=       | Forward page                                                |
    | =b=       | Backward page                                               |
    | =j=       | Jump to page                                                |
-   | =C-c C-s= | Filter and sort query according to the given query          |
+   | =C-c C-s= | Search envelopes using the himalaya v2 search DSL           |
    | =C-c a=   | Switch account                                              |
-   | =C-c f=   | Switch folder                                               |
+   | =C-c f=   | Switch mailbox                                              |
    | =C-c +=   | Add flag to marked envelopes (or envelope at point)         |
    | =C-c -=   | Remove flag from marked envelopes (or envelope at point)    |
    | =R=       | Reply to message at cursor                                  |
@@ -53,8 +56,6 @@
    | =a=       | Download marked messages (or message at cursor) attachments |
    | =C=       | Copy marked messages (or message at cursor)                 |
    | =M=       | Move marked messages (or message at cursor)                 |
-   | =D=       | Delete marked messages (or message at cursor)               |
-   | =e=       | Expunge current folder                                      |
    | =RET=     | Read message at cursor                                      |
 
 ** Read message
@@ -72,6 +73,11 @@
    | =R= | View raw message         |
    | =q= | Kill buffer              |
 
+   Protocol-specific deletion and folder expunge moved to the himalaya
+   v2 protocol-specific subcommands (=himalaya imap message delete=,
+   =himalaya imap mailbox expunge=, etc.); they are no longer surfaced
+   in the listing keymap.
+
 ** Reply all
 
    Pressing the universal argument key (=C-u= by default) before
@@ -79,8 +85,13 @@
 
 ** Write new message
 
-   When writing a new message or a reply, press =C-c C-c= to send it
-   or =C-c C-k= to delete it.
+   Compose buffers run in =message-mode= and accept inline MML
+   directives (=<#part type="..."> ... <#/part>=, =<#mml ...>=,
+   etc.). On =C-c C-c=, the buffer is compiled to MIME via
+   =mml-to-mime= and piped to =himalaya message send=. Press =C-c C-k=
+   to discard the draft.
+
+   Set =himalaya-from= to pre-fill the =From:= header.
 
 ** Extensions
 

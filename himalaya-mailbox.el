@@ -1,4 +1,4 @@
-;;; himalaya-account.el --- Account management of email client Himalaya CLI  -*- lexical-binding: t -*-
+;;; himalaya-mailbox.el --- Mailbox management for email client Himalaya CLI  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 Dante Catalfamo
 ;; Copyright (C) 2022-2026 soywod <clement.douin@posteo.net>
@@ -7,7 +7,7 @@
 ;;      soywod <clement.douin@posteo.net>
 ;; Maintainer: soywod <clement.douin@posteo.net>
 ;;      Dante Catalfamo
-;; Version: 1.0
+;; Version: 2.0
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 ;; Keywords: mail comm
@@ -29,51 +29,52 @@
 
 ;;; Commentary:
 ;; Interface for the email client Himalaya CLI
-;; <https://github.com/soywod/himalaya>
+;; <https://github.com/pimalaya/himalaya>
 
 ;;; Code:
 
 (require 'himalaya-process)
+(require 'himalaya-account)
 
-(defvar himalaya-account nil
-  "The current selected account.")
+(defvar himalaya-mailbox nil
+  "The current mailbox.")
 
-(defun himalaya--list-accounts (callback)
-  "Fetch all accounts defined in the configuration file."
-  (message "Listing accounts…")
+(defun himalaya--list-mailboxes (callback)
+  "Fetch all mailboxes of the current account."
+  (message "Listing mailboxes…")
   (himalaya--run
    callback
    nil
-   "account"
-   "list"))
+   "mailbox"
+   "list"
+   (when himalaya-account (list "--account" himalaya-account))))
 
-(defun himalaya--with-account-names (callback)
-  "Fetch all accounts then call CALLBACK with their names."
-  (himalaya--list-accounts
+(defun himalaya--with-mailbox-names (callback)
+  "Fetch all mailboxes then call CALLBACK with their names."
+  (himalaya--list-mailboxes
    (lambda (result)
-     (funcall callback (mapcar (lambda (account) (plist-get account :name))
-                               (plist-get result :accounts))))))
+     (funcall callback (mapcar (lambda (mailbox) (plist-get mailbox :name))
+                               (plist-get result :mailboxes))))))
 
-(defun himalaya--pick-account (prompt callback)
-  "Ask user to pick an account using PROMPT then call CALLBACK with
-the selected account."
+(defun himalaya--pick-mailbox (prompt callback)
+  "Ask user to pick a mailbox using PROMPT then call CALLBACK with
+the selected mailbox."
   (interactive)
-  (himalaya--with-account-names
-   (lambda (accounts)
-     (funcall callback (completing-read prompt accounts)))))
+  (himalaya--with-mailbox-names
+   (lambda (mailboxes)
+     (funcall callback (completing-read prompt mailboxes)))))
 
-(defun himalaya-switch-account ()
-  "Ask user to pick an account, set it as current account then list
-envelopes."
+(defun himalaya-switch-mailbox ()
+  "Ask user to pick a mailbox, set it as the current mailbox then
+list envelopes."
   (interactive)
-  (himalaya--pick-account
-   "Account: "
-   (lambda (account)
-     (setq himalaya-account account)
-     (setq himalaya-mailbox nil)
+  (himalaya--pick-mailbox
+   "Mailbox: "
+   (lambda (mailbox)
+     (setq himalaya-mailbox mailbox)
      (setq himalaya-page 1)
      (himalaya--update-mode-line)
      (revert-buffer))))
 
-(provide 'himalaya-account)
-;;; himalaya-account.el ends here
+(provide 'himalaya-mailbox)
+;;; himalaya-mailbox.el ends here

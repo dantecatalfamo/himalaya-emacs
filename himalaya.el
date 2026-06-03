@@ -50,11 +50,11 @@
   :group 'himalaya)
 
 (defun himalaya--update-mode-line ()
-  "Update the mode line with the current account, folder and
+  "Update the mode line with the current account, mailbox and
 envelope listing page."
   (let* ((account (or himalaya-account "-"))
-	 (folder (or himalaya-folder "-"))
-	 (mode-line (format " Account[%s] Folder[%s] Page[%s]" account folder himalaya-page)))
+	 (mailbox (or himalaya-mailbox "-"))
+	 (mode-line (format " Account[%s] Mailbox[%s] Page[%s]" account mailbox himalaya-page)))
     (setq mode-line-process mode-line)))
 
 ;;;###autoload

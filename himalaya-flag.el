@@ -7,7 +7,7 @@
 ;;      soywod <clement.douin@posteo.net>
 ;; Maintainer: soywod <clement.douin@posteo.net>
 ;;      Dante Catalfamo
-;; Version: 1.0
+;; Version: 2.0
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 ;; Keywords: mail comm
@@ -29,13 +29,13 @@
 
 ;;; Commentary:
 ;; Interface for the email client Himalaya CLI
-;; <https://github.com/soywod/himalaya>
+;; <https://github.com/pimalaya/himalaya>
 
 ;;; Code:
 
 (require 'himalaya-process)
 (require 'himalaya-account)
-(require 'himalaya-folder)
+(require 'himalaya-mailbox)
 
 (defcustom himalaya-unseen-face font-lock-string-face
   "Font face for unseen envelope symbol."
@@ -65,19 +65,8 @@ flagged."
   :type 'text
   :group 'himalaya)
 
-(defcustom himalaya-deleted-face font-lock-keyword-face
-  "Font face for deleted envelope symbol."
-  :type 'face
-  :group 'himalaya)
-
-(defcustom himalaya-deleted-symbol "✘"
-  "Symbol to display in the flags column when a message has been
-marked for deletion."
-  :type 'text
-  :group 'himalaya)
-
 (defcustom himalaya-attachment-face font-lock-warning-face
-  "Font face for deleted envelope symbol."
+  "Font face for the attachment glyph."
   :type 'face
   :group 'himalaya)
 
@@ -87,8 +76,13 @@ attachment."
   :type 'text
   :group 'himalaya)
 
+(defun himalaya--flag-has-iana-p (flags iana)
+  "Return non-nil when FLAGS (a list of `{raw, iana}' plists)
+contains an entry whose `:iana' classification equals IANA."
+  (seq-some (lambda (f) (equal (plist-get f :iana) iana)) flags))
+
 (defun himalaya--add-flag (ids flag callback)
-  "Add FLAG to envelopes IDS from the current folder of the current
+  "Add FLAG to envelopes IDS from the current mailbox of the current
 account."
   (message "Adding flag %s…" flag)
   (himalaya--run
@@ -97,61 +91,61 @@ account."
    "flag"
    "add"
    (when himalaya-account (list "--account" himalaya-account))
-   (when himalaya-folder (list "--folder" himalaya-folder))
-   ids
-   flag))
+   (when himalaya-mailbox (list "--mailbox" himalaya-mailbox))
+   "--flag" flag
+   ids))
 
 (defun himalaya--remove-flag (ids flag callback)
-  "Remove FLAG to envelopes IDS from the current folder of the current
-account."
-  (message "Adding flag %s…" flag)
+  "Remove FLAG from envelopes IDS in the current mailbox of the
+current account."
+  (message "Removing flag %s…" flag)
   (himalaya--run
    callback
    nil
    "flag"
    "remove"
    (when himalaya-account (list "--account" himalaya-account))
-   (when himalaya-folder (list "--folder" himalaya-folder))
-   ids
-   flag))
+   (when himalaya-mailbox (list "--mailbox" himalaya-mailbox))
+   "--flag" flag
+   ids))
 
 (defun himalaya--flag-symbols (flags has-attachment)
-  "Generate a display string for FLAGS."
+  "Generate a display string for FLAGS (a list of `{raw, iana}'
+plists) and HAS-ATTACHMENT."
   (concat
-   (if (member "Seen" flags) " " (propertize himalaya-unseen-symbol 'face himalaya-unseen-face))
-   (if (member "Answered" flags) himalaya-answered-symbol " ")
-   (if (member "Flagged" flags) (propertize himalaya-flagged-symbol 'face himalaya-flagged-face) " ")
-   (if (member "Deleted" flags) (propertize himalaya-deleted-symbol 'face himalaya-deleted-face) " ")
+   (if (himalaya--flag-has-iana-p flags "seen") " " (propertize himalaya-unseen-symbol 'face himalaya-unseen-face))
+   (if (himalaya--flag-has-iana-p flags "answered") himalaya-answered-symbol " ")
+   (if (himalaya--flag-has-iana-p flags "flagged") (propertize himalaya-flagged-symbol 'face himalaya-flagged-face) " ")
    (if (eq has-attachment t) (propertize himalaya-attachment-symbol 'face himalaya-attachment-face) " ")))
 
 (defun himalaya-add-flag-marked-envelopes ()
   "Ask user to pick a flag then add it to marked envelopes, or to
- envelope at point if mark not set."
+envelope at point if mark not set."
   (interactive)
   (let ((prev-point (point))
 	(ids (or himalaya-marked-ids (list (tabulated-list-get-id))))
-	(flag (completing-read "Add flag: " (list "Seen" "Answered" "Flagged" "Deleted" "Drafts"))))
+	(flag (completing-read "Add flag: " (list "seen" "answered" "flagged" "draft"))))
     (himalaya--add-flag
      ids
      flag
      (lambda (status)
-       (message "%s" (string-trim status))
+       (message "%s" (or (plist-get status :message) status))
        (himalaya-unmark-all-envelopes t)
        (revert-buffer)
        (goto-char prev-point)))))
 
 (defun himalaya-remove-flag-marked-envelopes ()
   "Ask user to pick a flag then remove it from marked envelopes, or
- from envelope at point if mark not set."
+from envelope at point if mark not set."
   (interactive)
   (let ((prev-point (point))
 	(ids (or himalaya-marked-ids (list (tabulated-list-get-id))))
-	(flag (completing-read "Remove flag: " (list "Seen" "Answered" "Flagged" "Deleted" "Drafts"))))
+	(flag (completing-read "Remove flag: " (list "seen" "answered" "flagged" "draft"))))
     (himalaya--remove-flag
      ids
      flag
      (lambda (status)
-       (message "%s" (string-trim status))
+       (message "%s" (or (plist-get status :message) status))
        (himalaya-unmark-all-envelopes t)
        (revert-buffer)
        (goto-char prev-point)))))

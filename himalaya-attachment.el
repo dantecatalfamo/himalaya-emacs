@@ -7,7 +7,7 @@
 ;;      soywod <clement.douin@posteo.net>
 ;; Maintainer: soywod <clement.douin@posteo.net>
 ;;      Dante Catalfamo
-;; Version: 1.0
+;; Version: 2.0
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 ;; Keywords: mail comm
@@ -29,39 +29,59 @@
 
 ;;; Commentary:
 ;; Interface for the email client Himalaya CLI
-;; <https://github.com/soywod/himalaya>
+;; <https://github.com/pimalaya/himalaya>
 
 ;;; Code:
 
-(defun himalaya--download-attachments (ids callback)
-  "Download attachment(s) of message(s) matching envelope IDS."
-  (message "Downloading attachments…")
+(require 'cl-lib)
+
+(defun himalaya--download-attachments (message-id callback)
+  "Download every attachment of MESSAGE-ID from the current mailbox
+of the current account."
+  (message "Downloading attachments of %s…" message-id)
   (himalaya--run
    callback
    nil
    "attachment"
    "download"
    (when himalaya-account (list "--account" himalaya-account))
-   (when himalaya-folder (list "--folder" himalaya-folder))
-   ids))
+   (when himalaya-mailbox (list "--mailbox" himalaya-mailbox))
+   message-id))
+
+(defun himalaya--download-attachments-many (ids final-callback)
+  "Sequentially download attachments for each id in IDS, then call
+FINAL-CALLBACK with a list of per-id results."
+  (let ((results nil))
+    (cl-labels
+        ((step (remaining)
+           (if (null remaining)
+               (funcall final-callback (nreverse results))
+             (himalaya--download-attachments
+              (car remaining)
+              (lambda (result)
+                (push result results)
+                (step (cdr remaining)))))))
+      (step ids))))
 
 (defun himalaya-download-marked-attachments ()
   "Download attachment(s) of message(s) matching marked envelope(s),
 or matching the envelope at point if mark is not set."
   (interactive)
-  (himalaya--download-attachments
-   (or himalaya-marked-ids (list (tabulated-list-get-id)))
-   (lambda (status)
-     (message "%s" (string-trim status))
-     (himalaya-unmark-all-envelopes t))))
+  (let ((ids (or himalaya-marked-ids (list (tabulated-list-get-id)))))
+    (himalaya--download-attachments-many
+     ids
+     (lambda (results)
+       (let ((count (apply #'+ (mapcar (lambda (r) (length (plist-get r :attachments))) results))))
+         (message "Downloaded %d attachment(s) across %d message(s)" count (length ids)))
+       (himalaya-unmark-all-envelopes t)))))
 
 (defun himalaya-download-current-attachments ()
-  "Download attachment(s) of message matching the current envelope."
+  "Download attachment(s) of the current message."
   (interactive)
   (himalaya--download-attachments
    himalaya-id
-   (lambda (status)
-     (message "%s" (string-trim status)))))
+   (lambda (result)
+     (message "Downloaded %d attachment(s)" (length (plist-get result :attachments))))))
 
 (provide 'himalaya-attachment)
 ;;; himalaya-attachment.el ends here

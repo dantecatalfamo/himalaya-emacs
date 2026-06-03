@@ -7,7 +7,7 @@
 ;;      soywod <clement.douin@posteo.net>
 ;; Maintainer: soywod <clement.douin@posteo.net>
 ;;      Dante Catalfamo
-;; Version: 1.0
+;; Version: 2.0
 ;; Package-Requires: ((emacs "27.1"))
 ;; URL: https://github.com/dantecatalfamo/himalaya-emacs
 ;; Keywords: mail comm
@@ -29,13 +29,13 @@
 
 ;;; Commentary:
 ;; Interface for the email client Himalaya CLI
-;; <https://github.com/soywod/himalaya>
+;; <https://github.com/pimalaya/himalaya>
 
 ;;; Code:
 
 (require 'himalaya-process)
 (require 'himalaya-account)
-(require 'himalaya-folder)
+(require 'himalaya-mailbox)
 (require 'himalaya-envelope-mark)
 (require 'himalaya-flag)
 (require 'himalaya-message)
@@ -94,22 +94,28 @@
 (defvar himalaya-page 1
   "The current envelope list page.")
 
-(defvar himalaya-list-envelopes-query nil
-  "The current list envelopes filter and sort query.")
+(defvar himalaya-search-query nil
+  "The current envelope search query (filter + sort).")
 
 (defun himalaya--list-envelopes ()
-  "Fetch envelopes from the current account in the current
-folder. Paginate using the current page of global page size. This
-function is blocking because it is used by 'tabulated-list-entries'
-which cannot work with callbacks."
-  (himalaya--run-blocking
-   "envelope"
-   "list"
-   (when himalaya-folder (list "--folder" himalaya-folder))
-   (when himalaya-account (list "--account" himalaya-account))
-   (when himalaya-page (list "--page" (format "%s" himalaya-page)))
-   (when himalaya-list-envelopes-page-size (list "--page-size" (prin1-to-string himalaya-list-envelopes-page-size)))
-   (when himalaya-list-envelopes-query himalaya-list-envelopes-query)))
+  "Fetch envelopes from the current account in the current mailbox.
+Paginate using the current page of global page size. This function
+is blocking because it is used by `tabulated-list-entries' which
+cannot work with callbacks."
+  (let ((result
+         (apply
+          #'himalaya--run-blocking
+          (append
+           (list "envelope"
+                 (if himalaya-search-query "search" "list")
+                 "--has-attachment")
+           (when himalaya-mailbox (list "--mailbox" himalaya-mailbox))
+           (when himalaya-account (list "--account" himalaya-account))
+           (when himalaya-page (list "--page" (format "%s" himalaya-page)))
+           (when himalaya-list-envelopes-page-size
+             (list "--page-size" (prin1-to-string himalaya-list-envelopes-page-size)))
+           (when himalaya-search-query (list himalaya-search-query))))))
+    (plist-get result :envelopes)))
 
 (defun himalaya--build-envelopes-table ()
   "Build the envelopes table."
@@ -124,58 +130,59 @@ which cannot work with callbacks."
 	(plist-get email :id)
         (vector
          (propertize (plist-get email :id) 'face himalaya-id-face)
-         (himalaya--flag-symbols (plist-get email :flags) (plist-get email :has_attachment))
+         (himalaya--flag-symbols (plist-get email :flags) (plist-get email :has-attachment))
          (plist-get email :subject)
          (himalaya--build-envelopes-table-sender-column email)
-         (propertize (plist-get email :date) 'face himalaya-date-face)))
+         (propertize (or (plist-get email :date) "") 'face himalaya-date-face)))
        entries))
     (if himalaya-list-envelopes-order entries (nreverse entries))))
 
 (defun himalaya--build-envelopes-table-sender-column (email)
   "Build the sender column of the envelopes table."
-  (let* ((from (plist-get email :from))
+  (let* ((from (car (plist-get email :from)))
          (name (plist-get from :name))
-         (addr (plist-get from :addr)))
-    (propertize (if (eq name :null) addr name) 'face himalaya-sender-face)))
+         (addr (plist-get from :email)))
+    (propertize (if (and name (not (eq name :null))) name (or addr "")) 'face himalaya-sender-face)))
 
 (defun himalaya-list-envelopes-next-page ()
-  "Go to the next envelope listing page of the current folder."
+  "Go to the next envelope listing page of the current mailbox."
   (interactive)
   (setq himalaya-page (1+ himalaya-page))
   (himalaya--update-mode-line)
   (revert-buffer))
 
 (defun himalaya-list-envelopes-prev-page ()
-  "Go to the previous envelopes listing page of the current folder."
+  "Go to the previous envelopes listing page of the current mailbox."
   (interactive)
   (setq himalaya-page (max 1 (1- himalaya-page)))
   (himalaya--update-mode-line)
   (revert-buffer))
 
 (defun himalaya-list-envelopes-at-page (page)
-  "Jump to envelopes listing PAGE of the current folder."
+  "Jump to envelopes listing PAGE of the current mailbox."
   (interactive "nJump to page: ")
   (setq himalaya-page (max 1 page))
   (himalaya--update-mode-line)
   (revert-buffer))
 
-(defun himalaya-filter-and-sort-envelopes (query)
-  "Filter and sort envelopes of the current folder matching the
-given QUERY."
+(defun himalaya-search-envelopes (query)
+  "Search envelopes of the current mailbox matching the given QUERY.
+The query uses the himalaya v2 search DSL (and/or/not, parens,
+plus an `order by` sort suffix). Pass an empty string to clear."
   (interactive "MQuery: ")
-  (setq himalaya-list-envelopes-query (if (string-empty-p query) nil query))
+  (setq himalaya-search-query (if (string-empty-p query) nil query))
+  (setq himalaya-page 1)
   (himalaya--update-mode-line)
   (revert-buffer))
 
 (defvar himalaya-list-envelopes-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c a"  ) #'himalaya-switch-account)
-    (define-key map (kbd "C-c f"  ) #'himalaya-switch-folder)
-    (define-key map (kbd "e"      ) #'himalaya-expunge-folder)
+    (define-key map (kbd "C-c f"  ) #'himalaya-switch-mailbox)
     (define-key map (kbd "f"      ) #'himalaya-list-envelopes-next-page)
     (define-key map (kbd "b"      ) #'himalaya-list-envelopes-prev-page)
     (define-key map (kbd "j"      ) #'himalaya-list-envelopes-at-page)
-    (define-key map (kbd "C-c C-s") #'himalaya-filter-and-sort-envelopes)
+    (define-key map (kbd "C-c C-s") #'himalaya-search-envelopes)
     (define-key map (kbd "m"      ) #'himalaya-mark-envelope-forward)
     (define-key map (kbd "DEL"    ) #'himalaya-unmark-envelope-backward)
     (define-key map (kbd "u"      ) #'himalaya-unmark-envelope-forward)
@@ -188,7 +195,6 @@ given QUERY."
     (define-key map (kbd "F"      ) #'himalaya-forward-message-at-point)
     (define-key map (kbd "C"      ) #'himalaya-copy-marked-messages)
     (define-key map (kbd "M"      ) #'himalaya-move-marked-messages)
-    (define-key map (kbd "D"      ) #'himalaya-delete-marked-messages)
     (define-key map (kbd "a"      ) #'himalaya-download-marked-attachments)
     map))
 
@@ -209,7 +215,7 @@ given QUERY."
 
 ;;;###autoload
 (defun himalaya-list-envelopes ()
-  "Display envelopes from the current folder of the current account
+  "Display envelopes from the current mailbox of the current account
 in a table."
   (interactive)
   (switch-to-buffer "*Himalaya Envelopes*")
