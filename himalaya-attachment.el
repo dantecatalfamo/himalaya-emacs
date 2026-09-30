@@ -34,6 +34,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'subr-x)
 
 (defun himalaya--download-attachments (message-id callback)
   "Download every attachment of MESSAGE-ID from the current mailbox
@@ -63,6 +64,15 @@ FINAL-CALLBACK with a list of per-id results."
                 (step (cdr remaining)))))))
       (step ids))))
 
+(defun himalaya--report-downloads (results)
+  "Echo the paths the CLI wrote the attachments of RESULTS to."
+  (let ((paths (mapcan (lambda (r) (mapcar (lambda (a) (plist-get a :path))
+                                           (plist-get r :attachments)))
+                       results)))
+    (if paths
+        (message "Downloaded %d attachment(s): %s" (length paths) (string-join paths ", "))
+      (message "No attachment to download"))))
+
 (defun himalaya-download-marked-attachments ()
   "Download attachment(s) of message(s) matching marked envelope(s),
 or matching the envelope at point if mark is not set."
@@ -71,8 +81,7 @@ or matching the envelope at point if mark is not set."
     (himalaya--download-attachments-many
      ids
      (lambda (results)
-       (let ((count (apply #'+ (mapcar (lambda (r) (length (plist-get r :attachments))) results))))
-         (message "Downloaded %d attachment(s) across %d message(s)" count (length ids)))
+       (himalaya--report-downloads results)
        (himalaya-unmark-all-envelopes t)))))
 
 (defun himalaya-download-current-attachments ()
@@ -81,7 +90,7 @@ or matching the envelope at point if mark is not set."
   (himalaya--download-attachments
    himalaya-id
    (lambda (result)
-     (message "Downloaded %d attachment(s)" (length (plist-get result :attachments))))))
+     (himalaya--report-downloads (list result)))))
 
 (provide 'himalaya-attachment)
 ;;; himalaya-attachment.el ends here

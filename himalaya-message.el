@@ -396,7 +396,7 @@ mailbox."
    (lambda (target)
      (himalaya--copy-messages
       (or himalaya-marked-ids (list (tabulated-list-get-id)))
-      target
+      (plist-get target :id)
       (lambda (status)
 	(message "%s" (or (plist-get status :message) status))
 	(himalaya-unmark-all-envelopes t))))))
@@ -413,7 +413,7 @@ mailbox."
 	   (ids (or himalaya-marked-ids (list (tabulated-list-get-id)))))
        (himalaya--move-messages
 	ids
-	target
+	(plist-get target :id)
 	(lambda (status)
 	  (message "%s" (or (plist-get status :message) status))
 	  (himalaya-unmark-all-envelopes t)

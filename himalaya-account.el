@@ -71,6 +71,8 @@ envelopes."
    (lambda (account)
      (setq himalaya-account account)
      (setq himalaya-mailbox nil)
+     (setq himalaya-mailbox-name nil)
+     (setq himalaya-mailbox-role nil)
      (setq himalaya-page 1)
      (himalaya--update-mode-line)
      (revert-buffer))))

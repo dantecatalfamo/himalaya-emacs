@@ -33,6 +33,7 @@
 
 ;;; Code:
 
+(require 'parse-time)
 (require 'himalaya-process)
 (require 'himalaya-account)
 (require 'himalaya-mailbox)
@@ -65,6 +66,12 @@
 (defcustom himalaya-date-face font-lock-constant-face
   "Font face for dates."
   :type 'face
+  :group 'himalaya)
+
+(defcustom himalaya-date-format "%Y-%m-%d %H:%M"
+  "Format of the date column in the envelope list, as understood
+by `format-time-string'. Dates are shown in local time."
+  :type 'string
   :group 'himalaya)
 
 (defcustom himalaya-headers-face font-lock-constant-face
@@ -101,7 +108,7 @@
   "Update the mode line with the current account, mailbox and
 envelope listing page."
   (let* ((account (or himalaya-account "-"))
-	 (mailbox (or himalaya-mailbox "-"))
+	 (mailbox (or himalaya-mailbox-name himalaya-mailbox "-"))
 	 (mode-line (format " Account[%s] Mailbox[%s] Page[%s]" account mailbox himalaya-page)))
     (setq mode-line-process mode-line)))
 
@@ -131,8 +138,12 @@ cannot work with callbacks."
     (setq himalaya-page 1)
     (himalaya--update-mode-line)
     (goto-char (point-min)))
-  (let ((emails (himalaya--list-envelopes)) entries)
-    (dolist (email emails entries)
+  (let ((emails (himalaya--list-envelopes))
+        (recipient (equal himalaya-mailbox-role "sent"))
+        (id-width 2)
+        entries)
+    (dolist (email emails)
+      (setq id-width (max id-width (string-width (plist-get email :id))))
       (push
        (list
 	(plist-get email :id)
@@ -140,16 +151,39 @@ cannot work with callbacks."
          (propertize (plist-get email :id) 'face himalaya-id-face)
          (himalaya--flag-symbols (plist-get email :flags) (plist-get email :has-attachment))
          (or (himalaya--single-line (plist-get email :subject)) "")
-         (himalaya--build-envelopes-table-sender-column email)
-         (propertize (or (plist-get email :date) "") 'face himalaya-date-face)))
+         (himalaya--build-envelopes-table-address-column
+          (car (plist-get email (if recipient :to :from))))
+         (propertize (himalaya--format-date (plist-get email :date)) 'face himalaya-date-face)))
        entries))
+    (setq tabulated-list-format (himalaya--envelopes-table-format id-width recipient))
+    (tabulated-list-init-header)
     (if himalaya-list-envelopes-order entries (nreverse entries))))
 
-(defun himalaya--build-envelopes-table-sender-column (email)
-  "Build the sender column of the envelopes table."
-  (let* ((from (car (plist-get email :from)))
-         (name (himalaya--single-line (plist-get from :name)))
-         (addr (plist-get from :email)))
+(defun himalaya--envelopes-table-format (id-width recipient)
+  "Build the envelopes table format, with an ID column ID-WIDTH wide
+and a To column instead of From when RECIPIENT is non-nil."
+  (vector
+   (list "ID" id-width nil :right-align t)
+   (list "Flags" 7 nil)
+   (list "Subject" himalaya-subject-width nil)
+   (list (if recipient "To" "From") himalaya-from-width nil)
+   (list "Date" 19 nil)))
+
+(defun himalaya--format-date (date)
+  "Format DATE, an RFC 3339 string from the CLI, in local time using
+`himalaya-date-format'. Return DATE as it is when it cannot be
+parsed, and an empty string when it is missing."
+  (let ((time (and (stringp date) (ignore-errors (parse-iso8601-time-string date)))))
+    (cond
+     (time (format-time-string himalaya-date-format time))
+     ((stringp date) date)
+     (t ""))))
+
+(defun himalaya--build-envelopes-table-address-column (address)
+  "Build the sender (or recipient) column of the envelopes table from
+ADDRESS, a `{name, email}' plist."
+  (let ((name (himalaya--single-line (plist-get address :name)))
+        (addr (plist-get address :email)))
     (propertize (or name addr "") 'face himalaya-sender-face)))
 
 (defun himalaya-list-envelopes-next-page ()
@@ -208,13 +242,7 @@ plus an `order by` sort suffix). Pass an empty string to clear."
 
 (define-derived-mode himalaya-list-envelopes-mode tabulated-list-mode "Himalaya-Envelopes"
   "Himalaya envelope listing mode."
-  (setq tabulated-list-format
-	(vector
-         (list "ID" 5 nil :right-align t)
-         (list "Flags" 7 nil)
-         (list "Subject" himalaya-subject-width nil)
-         (list "From" himalaya-from-width nil)
-         (list "Date" 19 nil)))
+  (setq tabulated-list-format (himalaya--envelopes-table-format 2 nil))
   (setq tabulated-list-sort-key nil)
   (setq tabulated-list-entries #'himalaya--build-envelopes-table)
   (setq tabulated-list-padding 1)

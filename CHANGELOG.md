@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `himalaya-date-format` defcustom for the envelope list date column.
+- Added a To column in place of From when the current mailbox has the `sent` role.
+
+### Changed
+
+- Changed the mailbox pickers to pass the mailbox `id` to the CLI, as `mailbox list` documents, while completing and displaying its `name`. A name shared by several mailboxes is suffixed with its id.
+
 ### Fixed
+
+- Fixed the envelope list date column showing the raw RFC 3339 string of the CLI JSON output: dates are now shown in local time.
+- Fixed long envelope ids (Maildir, m2dir…) misaligning the envelope list: the ID column is now sized from the ids of the page.
+- Fixed flag add and remove echoing a raw plist, the CLI JSON output carrying no message.
+- Fixed attachment downloads not telling where files were written: the paths reported by the CLI are now echoed.
 
 - Fixed `n`/`p` in the message buffers: they now follow the envelope list (search and sort included, loading the adjacent page at a page edge) instead of incrementing the envelope id, which stopped at id gaps and broke on non-numeric ids. The view (plain or raw) is kept and the previous message buffer is killed. [#14]
 - Fixed `M-x himalaya` failing with `void-function himalaya--update-mode-line` when loaded through the package autoloads: the options and the mode-line helper moved out of `himalaya.el`, which the autoloaded commands never load. [#27]

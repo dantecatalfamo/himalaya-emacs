@@ -128,8 +128,8 @@ envelope at point if mark not set."
     (himalaya--add-flag
      ids
      flag
-     (lambda (status)
-       (message "%s" (or (plist-get status :message) status))
+     (lambda (_status)
+       (message "Flag %s added" flag)
        (himalaya-unmark-all-envelopes t)
        (revert-buffer)
        (goto-char prev-point)))))
@@ -144,8 +144,8 @@ from envelope at point if mark not set."
     (himalaya--remove-flag
      ids
      flag
-     (lambda (status)
-       (message "%s" (or (plist-get status :message) status))
+     (lambda (_status)
+       (message "Flag %s removed" flag)
        (himalaya-unmark-all-envelopes t)
        (revert-buffer)
        (goto-char prev-point)))))
