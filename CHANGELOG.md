@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed `n`/`p` in the message buffers: they now follow the envelope list (search and sort included, loading the adjacent page at a page edge) instead of incrementing the envelope id, which stopped at id gaps and broke on non-numeric ids. The view (plain or raw) is kept and the previous message buffer is killed. [#14]
+
 ## [2.0] - 2026-06-03
 
 ### Added
@@ -94,6 +98,7 @@ First release added to the [MELPA](https://github.com/melpa/melpa/pull/7952) rep
 [0.2]: https://github.com/dantecatalfamo/himalaya-emacs/compare/v0.1...v0.2
 [0.1]: https://github.com/dantecatalfamo/himalaya-emacs/compare/init...v0.1
 
+[#14]: https://github.com/dantecatalfamo/himalaya-emacs/issues/14
 [#15]: https://github.com/dantecatalfamo/himalaya-emacs/pull/15
 [#17]: https://github.com/dantecatalfamo/himalaya-emacs/pull/17
 [#22]: https://github.com/dantecatalfamo/himalaya-emacs/issues/22

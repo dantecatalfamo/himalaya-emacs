@@ -178,13 +178,22 @@ untouched."
       (buffer-string))))
 
 (defun himalaya--read-current-message (&optional pre-hook)
-  "Fetch the raw RFC 5322 message for the current envelope id,
-render it in a new buffer in `himalaya-read-message-mode' and
-focus that buffer. When PRE-HOOK is non-nil, call it before
-switching."
+  "Read the message of the current envelope id in the plain view."
+  (himalaya--read-message-view himalaya-id pre-hook))
+
+(defun himalaya--read-current-message-raw (&optional pre-hook)
+  "Read the message of the current envelope id in the raw view."
+  (himalaya--read-message-raw-view himalaya-id pre-hook))
+
+(defun himalaya--read-message-view (id &optional pre-hook)
+  "Fetch the raw RFC 5322 message for envelope ID, render it in a
+new buffer in `himalaya-read-message-mode' and focus that buffer.
+ID becomes the current envelope id once fetched. When PRE-HOOK is
+non-nil, call it before switching."
   (himalaya--read-message-raw
-   himalaya-id
+   id
    (lambda (raw)
+     (setq himalaya-id id)
      (when pre-hook (funcall pre-hook))
      (let* ((headers (himalaya--extract-headers raw))
             (subject (himalaya--decode-header-value (alist-get 'subject headers))))
@@ -198,13 +207,15 @@ switching."
          (setq buffer-read-only t)
          (setq himalaya-subject subject))))))
 
-(defun himalaya--read-current-message-raw (&optional pre-hook)
-  "Display the raw RFC 5322 bytes of the current envelope in a
-buffer in `himalaya-read-message-raw-mode'. When PRE-HOOK is
-non-nil, call it before switching."
+(defun himalaya--read-message-raw-view (id &optional pre-hook)
+  "Display the raw RFC 5322 bytes of envelope ID in a buffer in
+`himalaya-read-message-raw-mode'. ID becomes the current envelope
+id once fetched. When PRE-HOOK is non-nil, call it before
+switching."
   (himalaya--read-message-raw
-   himalaya-id
+   id
    (lambda (raw)
+     (setq himalaya-id id)
      (when pre-hook (funcall pre-hook))
      (let* ((headers (himalaya--extract-headers raw))
             (subject (himalaya--decode-header-value (alist-get 'subject headers))))
@@ -400,21 +411,61 @@ mailbox."
 	  (revert-buffer)
 	  (goto-char prev-point)))))))
 
+(defun himalaya--goto-envelope (id)
+  "Move point to the line of envelope ID in the current envelope
+list. Return nil when ID is not listed."
+  (goto-char (point-min))
+  (while (not (or (eobp) (equal (tabulated-list-get-id) id)))
+    (forward-line))
+  (not (eobp)))
+
+(defun himalaya--adjacent-envelope-id (step)
+  "Move point in the envelope list STEP lines away from the current
+envelope, then return the id found there. Load the adjacent page
+when crossing a page edge. Return nil at the mailbox edge."
+  (with-current-buffer (or (get-buffer "*Himalaya Envelopes*")
+                           (user-error "No envelope list to navigate"))
+    (unless (himalaya--goto-envelope himalaya-id)
+      (user-error "Current message is not in the envelope list"))
+    (cond
+     ((and (zerop (forward-line step)) (tabulated-list-get-id)))
+     ((> step 0)
+      (himalaya-list-envelopes-next-page)
+      (goto-char (point-min))
+      (or (tabulated-list-get-id)
+          (progn
+            (himalaya-list-envelopes-prev-page)
+            (himalaya--goto-envelope himalaya-id)
+            nil)))
+     ((> himalaya-page 1)
+      (himalaya-list-envelopes-prev-page)
+      (goto-char (point-max))
+      (forward-line -1)
+      (tabulated-list-get-id)))))
+
+(defun himalaya--read-adjacent-message (step)
+  "Replace the current message buffer with the message STEP
+envelopes away in the envelope list, keeping the view (plain or
+raw)."
+  (let ((id (himalaya--adjacent-envelope-id step))
+        (buffer (current-buffer)))
+    (unless id
+      (user-error (if (> step 0) "At end of mailbox" "At beginning of mailbox")))
+    (funcall (if (derived-mode-p 'himalaya-read-message-raw-mode)
+                 #'himalaya--read-message-raw-view
+               #'himalaya--read-message-view)
+             id
+             (lambda () (kill-buffer buffer)))))
+
 (defun himalaya-next-message ()
-  "Go to the next message."
+  "Read the message of the next envelope in the envelope list."
   (interactive)
-  (setq himalaya-id (prin1-to-string (1+ (string-to-number himalaya-id))))
-  (condition-case nil
-      (himalaya--read-current-message)
-    (t (user-error "At end of mailbox"))))
+  (himalaya--read-adjacent-message 1))
 
 (defun himalaya-prev-message ()
-  "Go to the previous message."
+  "Read the message of the previous envelope in the envelope list."
   (interactive)
-  (when (string= himalaya-id "1")
-    (user-error "At beginning of mailbox"))
-  (setq himalaya-id (prin1-to-string (max 1 (1- (string-to-number himalaya-id)))))
-  (himalaya--read-current-message))
+  (himalaya--read-adjacent-message -1))
 
 (defun himalaya-send-buffer ()
   "Compile the current buffer (MML directives included) into

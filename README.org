@@ -1,5 +1,6 @@
 * Himalaya Emacs
   [[https://melpa.org/#/himalaya][file:https://melpa.org/packages/himalaya-badge.svg]]
+  [[https://pimalaya.org/sponsor/][file:https://img.shields.io/badge/sponsor-pink?style=flat&logo=github-sponsors&logoColor=white]]
 
   Emacs front-end for the email client [[https://github.com/pimalaya/himalaya][Himalaya CLI]].
 
