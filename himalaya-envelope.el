@@ -97,6 +97,14 @@
 (defvar himalaya-search-query nil
   "The current envelope search query (filter + sort).")
 
+(defun himalaya--update-mode-line ()
+  "Update the mode line with the current account, mailbox and
+envelope listing page."
+  (let* ((account (or himalaya-account "-"))
+	 (mailbox (or himalaya-mailbox "-"))
+	 (mode-line (format " Account[%s] Mailbox[%s] Page[%s]" account mailbox himalaya-page)))
+    (setq mode-line-process mode-line)))
+
 (defun himalaya--list-envelopes ()
   "Fetch envelopes from the current account in the current mailbox.
 Paginate using the current page of global page size. This function

@@ -35,28 +35,6 @@
 
 (require 'himalaya-envelope)
 
-(defgroup himalaya nil
-  "Options related to the email client Himalaya CLI."
-  :group 'mail)
-
-(defcustom himalaya-executable "himalaya"
-  "Name or location of the email client Himalaya CLI executable."
-  :type 'text
-  :group 'himalaya)
-
-(defcustom himalaya-config-path nil
-  "Path to the email client Himalaya CLI configuration file."
-  :type '(file :must-match t)
-  :group 'himalaya)
-
-(defun himalaya--update-mode-line ()
-  "Update the mode line with the current account, mailbox and
-envelope listing page."
-  (let* ((account (or himalaya-account "-"))
-	 (mailbox (or himalaya-mailbox "-"))
-	 (mode-line (format " Account[%s] Mailbox[%s] Page[%s]" account mailbox himalaya-page)))
-    (setq mode-line-process mode-line)))
-
 ;;;###autoload
 (defalias 'himalaya #'himalaya-list-envelopes)
 

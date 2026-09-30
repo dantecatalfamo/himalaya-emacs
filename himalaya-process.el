@@ -33,6 +33,20 @@
 
 ;;; Code:
 
+(defgroup himalaya nil
+  "Options related to the email client Himalaya CLI."
+  :group 'mail)
+
+(defcustom himalaya-executable "himalaya"
+  "Name or location of the email client Himalaya CLI executable."
+  :type 'text
+  :group 'himalaya)
+
+(defcustom himalaya-config-path nil
+  "Path to the email client Himalaya CLI configuration file."
+  :type '(file :must-match t)
+  :group 'himalaya)
+
 (defun himalaya--clear-io-buffers ()
   (with-current-buffer (get-buffer-create "*Himalaya stdout*")
     (let ((inhibit-read-only t)) (erase-buffer)))
@@ -99,17 +113,23 @@ rather than JSON."
     (funcall callback (with-current-buffer (process-buffer process) (buffer-string)))))
 
 (defun himalaya--run-blocking (&rest args)
-  "Blocking version of `himalaya--run'."
+  "Blocking version of `himalaya--run'. Stderr is kept apart from
+stdout so that logs never corrupt the JSON output."
   (himalaya--clear-io-buffers)
-  (with-temp-buffer
-    (let* ((process-environment (cons "RUST_LOG=off" process-environment))
-           (args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "--json" args))
-           (exit-status (apply #'call-process himalaya-executable nil t nil (flatten-list args)))
-	   (output (buffer-string)))
-      (unless (eq 0 exit-status)
-        (with-current-buffer-window "*Himalaya stderr*" nil nil (insert output))
-        (error "Himalaya exited with a non-zero status"))
-      (json-parse-string output :object-type 'plist :array-type 'list))))
+  (let ((stderr (make-temp-file "himalaya-stderr")))
+    (unwind-protect
+        (with-temp-buffer
+          (let* ((process-environment (cons "RUST_LOG=off" process-environment))
+                 (args (list (when himalaya-config-path (list "-c" himalaya-config-path)) "--json" args))
+                 (exit-status (apply #'call-process himalaya-executable nil (list t stderr) nil (flatten-list args)))
+	         (output (buffer-string)))
+            (unless (eq 0 exit-status)
+              (with-current-buffer-window "*Himalaya stderr*" nil nil
+                (insert output)
+                (insert-file-contents stderr))
+              (error "Himalaya exited with a non-zero status"))
+            (json-parse-string output :object-type 'plist :array-type 'list)))
+      (delete-file stderr))))
 
 (provide 'himalaya-process)
 ;;; himalaya-process.el ends here
