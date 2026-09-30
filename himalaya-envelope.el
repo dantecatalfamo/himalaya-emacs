@@ -139,7 +139,7 @@ cannot work with callbacks."
         (vector
          (propertize (plist-get email :id) 'face himalaya-id-face)
          (himalaya--flag-symbols (plist-get email :flags) (plist-get email :has-attachment))
-         (plist-get email :subject)
+         (or (himalaya--single-line (plist-get email :subject)) "")
          (himalaya--build-envelopes-table-sender-column email)
          (propertize (or (plist-get email :date) "") 'face himalaya-date-face)))
        entries))
@@ -148,9 +148,9 @@ cannot work with callbacks."
 (defun himalaya--build-envelopes-table-sender-column (email)
   "Build the sender column of the envelopes table."
   (let* ((from (car (plist-get email :from)))
-         (name (plist-get from :name))
+         (name (himalaya--single-line (plist-get from :name)))
          (addr (plist-get from :email)))
-    (propertize (if (and name (not (eq name :null))) name (or addr "")) 'face himalaya-sender-face)))
+    (propertize (or name addr "") 'face himalaya-sender-face)))
 
 (defun himalaya-list-envelopes-next-page ()
   "Go to the next envelope listing page of the current mailbox."

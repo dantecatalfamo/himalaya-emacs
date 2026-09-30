@@ -74,10 +74,19 @@ verbatim to CALLBACK."
     (goto-char (point-min))
     (mail-header-extract-no-properties)))
 
+(defun himalaya--single-line (value)
+  "Return VALUE with line breaks and tabs collapsed into single
+spaces, then trimmed. Decoded headers can carry encoded newlines
+that would otherwise break buffer lines and header blocks. Return
+nil when VALUE is not a string."
+  (when (stringp value)
+    (string-trim (replace-regexp-in-string "[\r\n\t]+" " " value))))
+
 (defun himalaya--decode-header-value (value)
-  "Decode VALUE, an RFC 2047 encoded header string."
+  "Decode VALUE, an RFC 2047 encoded header string, into a single
+line."
   (when value
-    (rfc2047-decode-string value)))
+    (himalaya--single-line (rfc2047-decode-string value))))
 
 (defun himalaya--render-message (raw)
   "Render RAW (an RFC 5322 message) in the current buffer with
